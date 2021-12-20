@@ -40,6 +40,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-security:${springSecurityVersion}"
     implementation "org.springframework.boot:spring-boot-starter-web:${springWebVersion}"
     implementation "org.flywaydb:flyway-core:${flywayVersion}"
+
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     runtimeOnly "org.postgresql:postgresql:${postgresVersion}"
 
