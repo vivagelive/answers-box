@@ -1,6 +1,6 @@
 package com.example.answersboxapi.entity;
 
-import com.example.answersboxapi.enums.UserRole;
+import com.example.answersboxapi.enums.UserEntityRole;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -40,5 +40,5 @@ public class UserEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
-    private UserRole role;
+    private UserEntityRole role;
 }
