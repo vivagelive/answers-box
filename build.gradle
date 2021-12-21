@@ -1,7 +1,23 @@
+buildscript {
+    ext {
+        flywayVersion = '8.1.0'
+        lombokVersion = '1.18.22'
+        postgresVersion = '42.3.1'
+        snakeYamlVersion = '1.29'
+        springBootVersion = '2.6.1'
+        springDataVersion = '2.6.1'
+        springDependencyVersion = '1.0.11.RELEASE'
+        springSecurityVersion = '2.6.1'
+        springSecurityTestVersion = '5.5.1'
+        springTestVersion = '2.6.1'
+        springWebVersion = '2.6.1'
+    }
+}
+
 plugins {
-	id 'org.springframework.boot' version '2.6.1'
-	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-	id 'java'
+    id 'org.springframework.boot' version "${springBootVersion}"
+    id 'io.spring.dependency-management' version "${springDependencyVersion}"
+    id 'java'
 }
 
 group = 'com.example'
@@ -9,27 +25,31 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.flywaydb:flyway-core'
-	compileOnly 'org.projectlombok:lombok'
-	runtimeOnly 'org.postgresql:postgresql'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
+    implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springDataVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-security:${springSecurityVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-web:${springWebVersion}"
+    implementation "org.flywaydb:flyway-core:${flywayVersion}"
+
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    runtimeOnly "org.postgresql:postgresql:${postgresVersion}"
+
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springTestVersion}"
+    testImplementation "org.springframework.security:spring-security-test:${springSecurityTestVersion}"
 }
 
 test {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }
