@@ -44,9 +44,10 @@ CREATE TABLE IF NOT EXISTS public.question_details
 (
     id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     question_id uuid
-        CONSTRAINT question_id_fkey REFERENCES question (id) NOT NULL UNIQUE,
+        CONSTRAINT question_id_fkey REFERENCES question (id) NOT NULL,
     answer_id   uuid
-        CONSTRAINT answer_id_fkey REFERENCES answer (id)     NOT NULL UNIQUE
+        CONSTRAINT answer_id_fkey REFERENCES answer (id)     NOT NULL,
+    UNIQUE (question_id, answer_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.tag
@@ -59,7 +60,8 @@ CREATE TABLE IF NOT EXISTS public.tag_details
 (
     id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     question_id uuid
-        CONSTRAINT question_id_fkey REFERENCES question (id) NOT NULL UNIQUE,
+        CONSTRAINT question_id_fkey REFERENCES question (id) NOT NULL,
     tag_id      uuid
-        CONSTRAINT tag_id_fkey REFERENCES tag (id)           NOT NULL UNIQUE
+        CONSTRAINT tag_id_fkey REFERENCES tag (id)           NOT NULL,
+    UNIQUE (question_id, tag_id)
 );

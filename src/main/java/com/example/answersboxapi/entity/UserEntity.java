@@ -1,6 +1,6 @@
 package com.example.answersboxapi.entity;
 
-import com.example.answersboxapi.enums.UserEntityRole;
+import com.example.answersboxapi.entity.enums.UserEntityRole;
 import lombok.Data;
 
 import javax.persistence.*;
