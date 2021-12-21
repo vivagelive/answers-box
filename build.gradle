@@ -4,13 +4,14 @@ buildscript {
         lombokVersion = '1.18.22'
         postgresVersion = '42.3.1'
         snakeYamlVersion = '1.29'
-        springBootVersion = '2.6.1'
+        springBootVersion = '2.5.5'
         springDataVersion = '2.6.1'
         springDependencyVersion = '1.0.11.RELEASE'
         springSecurityVersion = '2.6.1'
         springSecurityTestVersion = '5.5.1'
         springTestVersion = '2.6.1'
         springWebVersion = '2.6.1'
+        swagger2Version = '3.0.0'
     }
 }
 
@@ -36,10 +37,12 @@ repositories {
 
 dependencies {
     implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
+    implementation "org.flywaydb:flyway-core:${flywayVersion}"
+    implementation "io.springfox:springfox-swagger2:${swagger2Version}"
+    implementation "io.springfox:springfox-swagger-ui:${swagger2Version}"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springDataVersion}"
     implementation "org.springframework.boot:spring-boot-starter-security:${springSecurityVersion}"
     implementation "org.springframework.boot:spring-boot-starter-web:${springWebVersion}"
-    implementation "org.flywaydb:flyway-core:${flywayVersion}"
 
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     runtimeOnly "org.postgresql:postgresql:${postgresVersion}"
