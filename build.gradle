@@ -1,7 +1,10 @@
 buildscript {
     ext {
+        enumTypesVersion = '2.14.0'
+        fakerVersion = '1.0.1'
         flywayVersion = '8.1.0'
         lombokVersion = '1.18.22'
+        mapStructVersion = '1.4.2.Final'
         postgresVersion = '42.3.1'
         snakeYamlVersion = '1.29'
         springBootVersion = '2.5.5'
@@ -12,6 +15,7 @@ buildscript {
         springTestVersion = '2.6.1'
         springWebVersion = '2.6.1'
         swagger2Version = '3.0.0'
+        testcontainersVersion = '1.16.2'
     }
 }
 
@@ -38,8 +42,10 @@ repositories {
 dependencies {
     implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
     implementation "org.flywaydb:flyway-core:${flywayVersion}"
+    implementation "org.mapstruct:mapstruct:${mapStructVersion}"
     implementation "io.springfox:springfox-swagger2:${swagger2Version}"
     implementation "io.springfox:springfox-swagger-ui:${swagger2Version}"
+    implementation "com.vladmihalcea:hibernate-types-55:${enumTypesVersion}"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springDataVersion}"
     implementation "org.springframework.boot:spring-boot-starter-security:${springSecurityVersion}"
     implementation "org.springframework.boot:spring-boot-starter-web:${springWebVersion}"
@@ -48,7 +54,11 @@ dependencies {
     runtimeOnly "org.postgresql:postgresql:${postgresVersion}"
 
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapStructVersion}"
 
+    testImplementation "com.github.javafaker:javafaker:${fakerVersion}"
+    testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springTestVersion}"
     testImplementation "org.springframework.security:spring-security-test:${springSecurityTestVersion}"
 }
