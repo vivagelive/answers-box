@@ -1,7 +1,13 @@
 package com.example.answersboxapi.entity;
 
-import com.example.answersboxapi.entity.enums.UserEntityRole;
+import com.example.answersboxapi.enums.UserEntityRole;
+import com.vladmihalcea.hibernate.type.basic.PostgreSQLEnumType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
 
 import javax.persistence.*;
 import java.time.Instant;
@@ -9,7 +15,14 @@ import java.util.UUID;
 
 @Data
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "users")
+@TypeDef(
+        name = "pgsql_enum",
+        typeClass = PostgreSQLEnumType.class)
+
 public class UserEntity {
 
     @Id
@@ -21,7 +34,7 @@ public class UserEntity {
     private String firstName;
 
     @Column(name = "last_name")
-    private String last_name;
+    private String lastName;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -39,6 +52,7 @@ public class UserEntity {
     private Instant deletedAt;
 
     @Enumerated(EnumType.STRING)
+    @Type(type = "pgsql_enum")
     @Column(name = "role", nullable = false)
     private UserEntityRole role;
 }
