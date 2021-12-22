@@ -19,7 +19,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public User signUp(final SignUpRequest requestUser) {
         if (userService.existByEmail(requestUser.getEmail())) {
-            throw new EntityAlreadyProcessedException(format("User with %s already exist", requestUser.getEmail()));
+            throw new EntityAlreadyProcessedException(format("User with email %s already exist", requestUser.getEmail()));
         }
         return userService.create(requestUser);
     }

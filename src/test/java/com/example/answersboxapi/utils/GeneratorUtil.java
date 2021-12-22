@@ -2,6 +2,7 @@ package com.example.answersboxapi.utils;
 
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
+import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.github.javafaker.Faker;
 
@@ -33,4 +34,14 @@ public class GeneratorUtil {
                 .password(FAKER.internet().password(true))
                 .build();
     }
+
+    public static SignUpRequest generateSignUpRequest(final String email) {
+        return SignUpRequest.builder()
+                .email(email)
+                .firstName(FAKER.name().firstName())
+                .lastName(FAKER.name().lastName())
+                .password(FAKER.internet().password(true))
+                .build();
+    }
+
 }

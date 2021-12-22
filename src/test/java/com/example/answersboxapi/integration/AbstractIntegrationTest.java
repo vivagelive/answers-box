@@ -44,13 +44,7 @@ public class AbstractIntegrationTest {
         userRepository.deleteAll();
     }
 
-    protected User createUserSignUp(final SignUpRequest user) {
-        final String encodedPassword = passwordEncoder.encode(user.getPassword());
-
-        final UserEntity userToSave = generateUser();
-        userToSave.setEmail(user.getEmail());
-        userToSave.setPassword(encodedPassword);
-
-        return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
+    protected User createUser() {
+        return USER_MAPPER.toModel(userRepository.saveAndFlush(generateUser()));
     }
 }

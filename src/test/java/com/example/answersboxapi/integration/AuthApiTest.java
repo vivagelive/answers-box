@@ -39,9 +39,9 @@ public class AuthApiTest extends AbstractIntegrationTest {
     @Test
     public void signUp_whenEmailExist() throws Exception {
         //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
+        final User savedUser = createUser();
 
-        createUserSignUp(signUpRequest);
+        final SignUpRequest signUpRequest = generateSignUpRequest(savedUser.getEmail());
 
         //when
         final ResultActions resultAction = mockMvc.perform(post(AUTH_URL + "/sign-up")

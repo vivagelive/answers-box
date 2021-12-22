@@ -22,7 +22,6 @@ import java.util.UUID;
 @TypeDef(
         name = "pgsql_enum",
         typeClass = PostgreSQLEnumType.class)
-
 public class UserEntity {
 
     @Id
