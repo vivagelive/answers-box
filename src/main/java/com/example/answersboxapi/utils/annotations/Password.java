@@ -1,4 +1,4 @@
-package com.example.answersboxapi.utils.validation;
+package com.example.answersboxapi.utils.annotations;
 
 import com.example.answersboxapi.utils.PasswordValidator;
 

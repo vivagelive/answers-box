@@ -1,4 +1,4 @@
-package com.example.answersboxapi.utils.validation;
+package com.example.answersboxapi.utils.annotations;
 
 
 import com.auth0.jwt.interfaces.Payload;

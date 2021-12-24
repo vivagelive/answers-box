@@ -1,6 +1,6 @@
 package com.example.answersboxapi.utils;
 
-import com.example.answersboxapi.utils.validation.Email;
+import com.example.answersboxapi.utils.annotations.Email;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;

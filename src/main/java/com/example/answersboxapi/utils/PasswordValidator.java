@@ -1,6 +1,6 @@
 package com.example.answersboxapi.utils;
 
-import com.example.answersboxapi.utils.validation.Password;
+import com.example.answersboxapi.utils.annotations.Password;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
