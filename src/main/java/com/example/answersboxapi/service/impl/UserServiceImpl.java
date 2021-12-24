@@ -2,11 +2,15 @@ package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
+import com.example.answersboxapi.exceptions.UnauthorizedException;
+import com.example.answersboxapi.model.UserDetailsImpl;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.repository.UserRepository;
 import com.example.answersboxapi.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,5 +47,18 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public boolean existByEmail(final String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(final String email) throws UsernameNotFoundException {
+        final UserEntity foundUser =
+                userRepository.findByEmail(email).orElseThrow(() -> new UnauthorizedException("Email or password is invalid"));
+
+        final UserDetailsImpl userDetails = new UserDetailsImpl();
+        userDetails.setEmail(foundUser.getEmail());
+        userDetails.setPassword(foundUser.getPassword());
+        userDetails.setRole(foundUser.getRole());
+
+        return userDetails;
     }
 }

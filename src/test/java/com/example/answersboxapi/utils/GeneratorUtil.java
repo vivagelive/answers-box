@@ -2,7 +2,7 @@ package com.example.answersboxapi.utils;
 
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
-import com.example.answersboxapi.model.User;
+import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.github.javafaker.Faker;
 
@@ -11,6 +11,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 public class GeneratorUtil {
+
+    private static final String INVALID_EMAIL = "qwe.rty@gmailcom";
+    private static final String INVALID_PASSWORD = "qrty";
 
     private static final Faker FAKER = new Faker();
 
@@ -44,4 +47,10 @@ public class GeneratorUtil {
                 .build();
     }
 
+    public static SignInRequest generateInvalidSignInRequest() {
+        return SignInRequest.builder()
+                .email(INVALID_EMAIL)
+                .password(INVALID_PASSWORD)
+                .build();
+    }
 }

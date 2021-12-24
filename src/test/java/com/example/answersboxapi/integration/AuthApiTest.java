@@ -1,15 +1,19 @@
 package com.example.answersboxapi.integration;
 
 import com.example.answersboxapi.model.User;
+import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
+import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.utils.assertions.AssertionsCaseForModel;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static com.example.answersboxapi.utils.GeneratorUtil.generateInvalidSignInRequest;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateSignUpRequest;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -50,5 +54,53 @@ public class AuthApiTest extends AbstractIntegrationTest {
 
         //then
         resultAction.andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    public void signIn_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        createUser(signUpRequest);
+
+        //when
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        //then
+
+        assertNotNull(token);
+    }
+
+    @Test
+    public void signIn_whenEmailInvalid() throws Exception {
+        //given
+        final User savedUser = createUser();
+
+        final SignInRequest signInRequest = generateInvalidSignInRequest();
+        signInRequest.setPassword(savedUser.getPassword());
+
+        //when
+        final ResultActions result = mockMvc.perform(post(AUTH_URL + "/sign-in")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(signInRequest)));
+
+        //then
+        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void signIn_whenPasswordInvalid() throws Exception {
+        //given
+        final User savedUser = createUser();
+
+        final SignInRequest signInRequest = generateInvalidSignInRequest();
+        signInRequest.setEmail(savedUser.getPassword());
+
+        //when
+        final ResultActions result = mockMvc.perform(post(AUTH_URL + "/sign-in")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(signInRequest)));
+
+        //then
+        result.andExpect(status().isUnauthorized());
     }
 }

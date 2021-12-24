@@ -14,8 +14,8 @@ public class User {
     private String lastName;
     private String email;
     private String password;
-    private Instant created_at;
-    private Instant updated_at;
-    private Instant deleted_at;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private Instant deletedAt;
     private UserRole role;
 }
