@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
+import static com.example.answersboxapi.utils.GeneratorUtil.generateSignInRequest;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateUser;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -55,7 +56,7 @@ public class AbstractIntegrationTest {
     }
 
     protected TokenResponse createSignIn(final SignUpRequest signedUpUser) throws Exception{
-        final SignInRequest signInRequest = createSignInRequest(signedUpUser.getEmail(), signedUpUser.getPassword());
+        final SignInRequest signInRequest = generateSignInRequest(signedUpUser.getEmail(), signedUpUser.getPassword());
 
         final MvcResult result = mockMvc.perform(post(AUTH_URL + "/sign-in")
                 .content(objectMapper.writeValueAsString(signInRequest))
@@ -64,13 +65,6 @@ public class AbstractIntegrationTest {
                 .andReturn();
 
         return objectMapper.readValue(result.getResponse().getContentAsByteArray(),TokenResponse.class);
-    }
-
-    protected SignInRequest createSignInRequest(final String login, final String password) {
-        return SignInRequest.builder()
-                .email(login)
-                .password(password)
-                .build();
     }
 
     protected User createUser(final SignUpRequest signUpRequest) {

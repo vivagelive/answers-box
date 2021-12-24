@@ -66,7 +66,6 @@ public class AuthApiTest extends AbstractIntegrationTest {
         final TokenResponse token = createSignIn(signUpRequest);
 
         //then
-
         assertNotNull(token);
     }
 
@@ -77,23 +76,6 @@ public class AuthApiTest extends AbstractIntegrationTest {
 
         final SignInRequest signInRequest = generateInvalidSignInRequest();
         signInRequest.setPassword(savedUser.getPassword());
-
-        //when
-        final ResultActions result = mockMvc.perform(post(AUTH_URL + "/sign-in")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(signInRequest)));
-
-        //then
-        result.andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    public void signIn_whenPasswordInvalid() throws Exception {
-        //given
-        final User savedUser = createUser();
-
-        final SignInRequest signInRequest = generateInvalidSignInRequest();
-        signInRequest.setEmail(savedUser.getPassword());
 
         //when
         final ResultActions result = mockMvc.perform(post(AUTH_URL + "/sign-in")

@@ -20,7 +20,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
 
-@Data
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor

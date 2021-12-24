@@ -53,4 +53,11 @@ public class GeneratorUtil {
                 .password(INVALID_PASSWORD)
                 .build();
     }
+
+    public static SignInRequest generateSignInRequest(final String login, final String password) {
+        return SignInRequest.builder()
+                .email(login)
+                .password(password)
+                .build();
+    }
 }
