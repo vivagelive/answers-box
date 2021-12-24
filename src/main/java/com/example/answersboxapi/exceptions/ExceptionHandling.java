@@ -13,4 +13,14 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handle(EntityAlreadyProcessedException exception) {
         return new ResponseEntity<>(exception.getMessage(), new HttpHeaders(), exception.getStatus());
     }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Object> handle(UnauthorizedException exception) {
+        return new ResponseEntity<>(exception.getMessage(), new HttpHeaders(), exception.getStatus());
+    }
+
+    @ExceptionHandler(TokenNotValidException.class)
+    public ResponseEntity<Object> handle(TokenNotValidException exception) {
+        return new ResponseEntity<>(exception.getMessage(), new HttpHeaders(), exception.getStatus());
+    }
 }

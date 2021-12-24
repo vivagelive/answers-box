@@ -3,6 +3,7 @@ buildscript {
         enumTypesVersion = '2.14.0'
         fakerVersion = '1.0.1'
         flywayVersion = '8.1.0'
+        jwtVersion = '3.18.2'
         lombokVersion = '1.18.22'
         mapStructVersion = '1.4.2.Final'
         postgresVersion = '42.3.1'
@@ -14,7 +15,7 @@ buildscript {
         springSecurityTestVersion = '5.5.1'
         springTestVersion = '2.6.1'
         springWebVersion = '2.6.1'
-        swagger2Version = '3.0.0'
+        swagger2Version = '2.8.0'
         testcontainersVersion = '1.16.2'
     }
 }
@@ -40,6 +41,7 @@ repositories {
 }
 
 dependencies {
+    implementation "com.auth0:java-jwt:${jwtVersion}"
     implementation "org.yaml:snakeyaml:${snakeYamlVersion}"
     implementation "org.flywaydb:flyway-core:${flywayVersion}"
     implementation "org.mapstruct:mapstruct:${mapStructVersion}"
