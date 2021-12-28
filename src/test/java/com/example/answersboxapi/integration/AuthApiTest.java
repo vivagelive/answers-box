@@ -45,7 +45,7 @@ public class AuthApiTest extends AbstractIntegrationTest {
         //given
         final User savedUser = createUser();
 
-        final SignUpRequest signUpRequest = generateSignUpRequest(savedUser.getEmail());
+        final SignUpRequest signUpRequest = generateSignUpRequest(savedUser.getEmail(), savedUser.getPassword());
 
         //when
         final ResultActions resultAction = mockMvc.perform(post(AUTH_URL + "/sign-up")
@@ -83,6 +83,6 @@ public class AuthApiTest extends AbstractIntegrationTest {
                 .content(objectMapper.writeValueAsString(signInRequest)));
 
         //then
-        result.andExpect(status().isUnauthorized());
+        result.andExpect(status().isBadRequest());
     }
 }
