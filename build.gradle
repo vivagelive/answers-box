@@ -17,6 +17,7 @@ buildscript {
         springWebVersion = '2.6.1'
         swagger2Version = '2.8.0'
         testcontainersVersion = '1.16.2'
+        validatorVersion = '6.2.0.Final'
     }
 }
 
@@ -48,6 +49,7 @@ dependencies {
     implementation "io.springfox:springfox-swagger2:${swagger2Version}"
     implementation "io.springfox:springfox-swagger-ui:${swagger2Version}"
     implementation "com.vladmihalcea:hibernate-types-55:${enumTypesVersion}"
+    implementation "org.hibernate.validator:hibernate-validator:${validatorVersion}"
     implementation "org.springframework.boot:spring-boot-starter-data-jpa:${springDataVersion}"
     implementation "org.springframework.boot:spring-boot-starter-security:${springSecurityVersion}"
     implementation "org.springframework.boot:spring-boot-starter-web:${springWebVersion}"

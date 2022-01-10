@@ -38,12 +38,12 @@ public class GeneratorUtil {
                 .build();
     }
 
-    public static SignUpRequest generateSignUpRequest(final String email) {
+    public static SignUpRequest generateSignUpRequest(final String email, final String password ) {
         return SignUpRequest.builder()
                 .email(email)
                 .firstName(FAKER.name().firstName())
                 .lastName(FAKER.name().lastName())
-                .password(FAKER.internet().password(true))
+                .password(password)
                 .build();
     }
 
@@ -57,6 +57,13 @@ public class GeneratorUtil {
     public static SignInRequest generateSignInRequest(final String login, final String password) {
         return SignInRequest.builder()
                 .email(login)
+                .password(password)
+                .build();
+    }
+
+    public static SignInRequest generateInvalidSignInRequest(final String email, final String password) {
+        return SignInRequest.builder()
+                .email(email)
                 .password(password)
                 .build();
     }
