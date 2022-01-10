@@ -55,8 +55,8 @@ public class AuthApiTest extends AbstractUnitTest {
         final MvcResult result = mockMvc.perform(post(AUTH_URL + "/sign-up")
                         .content(objectMapper.writeValueAsString(signUpRequest))
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
         final List<UnexpectedException> errors = objectMapper.readValue(result.getResponse()
                 .getContentAsByteArray(), new TypeReference<>() {
@@ -78,13 +78,12 @@ public class AuthApiTest extends AbstractUnitTest {
         final MvcResult result = mockMvc.perform(post(AUTH_URL + "/sign-up")
                         .content(objectMapper.writeValueAsString(signUpRequest))
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
         final List<UnexpectedException> errors = objectMapper.readValue(result.getResponse()
                 .getContentAsByteArray(), new TypeReference<>() {
         });
-        System.out.println(errors);
 
         //then
         assertAll(
@@ -117,8 +116,8 @@ public class AuthApiTest extends AbstractUnitTest {
         final MvcResult result = mockMvc.perform(post(AUTH_URL + "/sign-in")
                         .content(objectMapper.writeValueAsString(signInRequest))
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
         final List<UnexpectedException> errors = objectMapper.readValue(result.getResponse()
                 .getContentAsByteArray(), new TypeReference<>() {
@@ -140,8 +139,8 @@ public class AuthApiTest extends AbstractUnitTest {
         final MvcResult result = mockMvc.perform(post(AUTH_URL + "/sign-in")
                         .content(objectMapper.writeValueAsString(signInRequest))
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
         final List<UnexpectedException> errors = objectMapper.readValue(result.getResponse()
                 .getContentAsByteArray(), new TypeReference<>() {
@@ -163,8 +162,8 @@ public class AuthApiTest extends AbstractUnitTest {
         final MvcResult result = mockMvc.perform(post(AUTH_URL + "/sign-in")
                         .content(objectMapper.writeValueAsString(signInRequest))
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isBadRequest())
-                        .andReturn();
+                .andExpect(status().isBadRequest())
+                .andReturn();
 
         final List<UnexpectedException> errors = objectMapper.readValue(result.getResponse()
                 .getContentAsByteArray(), new TypeReference<>() {

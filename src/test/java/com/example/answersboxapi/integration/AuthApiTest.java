@@ -10,8 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
-import static com.example.answersboxapi.utils.GeneratorUtil.generateInvalidSignInRequest;
-import static com.example.answersboxapi.utils.GeneratorUtil.generateSignUpRequest;
+import static com.example.answersboxapi.utils.GeneratorUtil.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -84,5 +83,20 @@ public class AuthApiTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void signIn_wrongUser() throws Exception {
+        //given
+        final SignInRequest signInRequest =
+                generateSignInRequest(generateSignUpRequest().getEmail(), generateSignUpRequest().getPassword());
+
+        //when
+        final ResultActions result = mockMvc.perform(post(AUTH_URL + "/sign-in")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(signInRequest)));
+
+        //then
+        result.andExpect(status().isUnauthorized());
     }
 }
