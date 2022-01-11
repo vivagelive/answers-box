@@ -30,6 +30,11 @@ public class ExceptionHandling extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(exception.getMessage(), new HttpHeaders(), exception.getStatus());
     }
 
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Object> handle(EntityNotFoundException exception) {
+        return new ResponseEntity<>(exception.getMessage(), new HttpHeaders(), exception.getStatus());
+    }
+
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
                                                                   HttpHeaders headers, HttpStatus status,

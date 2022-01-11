@@ -2,10 +2,11 @@ package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
+import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.UnauthorizedException;
+import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.model.UserDetailsImpl;
 import com.example.answersboxapi.model.auth.SignUpRequest;
-import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.repository.UserRepository;
 import com.example.answersboxapi.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
+import static com.example.answersboxapi.utils.SecurityUtils.getCurrentUser;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +49,15 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public boolean existByEmail(final String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public User getCurrent() {
+        final UserDetailsImpl userDetails = getCurrentUser();
+
+        return USER_MAPPER.toModel(
+                userRepository.findByEmail(userDetails.getEmail()).orElseThrow(
+                        () -> new EntityNotFoundException(String.format("User with email %s not ", userDetails.getEmail()))));
     }
 
     @Override

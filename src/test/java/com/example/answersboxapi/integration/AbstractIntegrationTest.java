@@ -32,7 +32,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(initializers = PostgresInitializer.class)
 public class AbstractIntegrationTest {
 
+    protected static final String AUTHORIZATION = "Authorization";
     protected static final String AUTH_URL = "/api/v1/auth";
+    protected static final String TOKEN_PREFIX = "Bearer ";
 
     @Autowired
     protected MockMvc mockMvc;

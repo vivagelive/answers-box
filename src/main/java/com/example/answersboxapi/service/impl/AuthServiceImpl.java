@@ -2,6 +2,7 @@ package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.config.JwtTokenProvider;
 import com.example.answersboxapi.exceptions.EntityAlreadyProcessedException;
+import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.UnauthorizedException;
 import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
@@ -44,5 +46,14 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("Email or password is invalid");
         }
         return jwtTokenProvider.createToken(authentication);
+    }
+
+    @Override
+    public void logout() {
+        final User currentUser = userService.getCurrent();
+
+        if (currentUser != null) {
+            SecurityContextHolder.clearContext();
+        } else throw new EntityNotFoundException("User not found");
     }
 }

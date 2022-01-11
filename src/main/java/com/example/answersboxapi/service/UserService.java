@@ -9,4 +9,6 @@ public interface UserService extends UserDetailsService {
     User create(final SignUpRequest requestUser);
 
     boolean existByEmail(final String email);
+
+    User getCurrent();
 }
