@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
 
         return USER_MAPPER.toModel(
                 userRepository.findByEmail(userDetails.getEmail()).orElseThrow(
-                        () -> new EntityNotFoundException(String.format("User with email %s not ", userDetails.getEmail()))));
+                        () -> new EntityNotFoundException(String.format("User with email %s not found", userDetails.getEmail()))));
     }
 
     @Override
