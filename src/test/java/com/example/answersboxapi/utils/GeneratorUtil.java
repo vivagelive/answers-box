@@ -4,6 +4,7 @@ import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
+import com.example.answersboxapi.model.auth.TokenRequest;
 import com.github.javafaker.Faker;
 
 import java.time.Instant;
@@ -65,6 +66,12 @@ public class GeneratorUtil {
         return SignInRequest.builder()
                 .email(email)
                 .password(password)
+                .build();
+    }
+
+    public static TokenRequest generateTokenRequest(final String accessToken) {
+        return TokenRequest.builder()
+                .token(accessToken)
                 .build();
     }
 }

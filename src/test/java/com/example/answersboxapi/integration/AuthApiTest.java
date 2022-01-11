@@ -3,16 +3,17 @@ package com.example.answersboxapi.integration;
 import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
+import com.example.answersboxapi.model.auth.TokenRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.utils.assertions.AssertionsCaseForModel;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -98,5 +99,44 @@ public class AuthApiTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void logout_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        createUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+        final TokenRequest tokenRequest = generateTokenRequest(token.getAccessToken());
+
+        //when
+        mockMvc.perform(post(AUTH_URL + "/logout")
+                        .header(AUTHORIZATION,TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(tokenRequest)))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        //then
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    public void logout_whenNotSignedIn() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        createUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+        final TokenRequest tokenRequest = generateTokenRequest(token.getAccessToken());
+
+        //when
+        final ResultActions result = mockMvc.perform(post(AUTH_URL + "/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(tokenRequest)));
+
+        //then
+        result.andExpect(status().isForbidden());
     }
 }
