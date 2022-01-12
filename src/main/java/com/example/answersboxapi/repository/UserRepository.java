@@ -15,6 +15,9 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     boolean existsByEmail(final String email);
 
+    @Query(value = "SELECT EXISTS(SELECT * FROM users WHERE id = :id AND deleted_at IS NULL)", nativeQuery = true)
+    boolean existsById(@Param("id") final UUID id);
+
     @Query(value = "SELECT * FROM users WHERE email = :email AND deleted_at IS NULL;", nativeQuery = true)
     Optional<UserEntity> findByEmail(@Param("email") final String email);
 

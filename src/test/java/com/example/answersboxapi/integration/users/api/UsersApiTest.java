@@ -32,19 +32,6 @@ public class UsersApiTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void deleteById_whenUnauthorized() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        final User savedUser = createUser(signUpRequest);
-
-        //when
-        final ResultActions result = mockMvc.perform(delete(USER_URL + "/{id}", savedUser.getId()));
-
-        //then
-        result.andExpect(status().isForbidden());
-    }
-
-    @Test
     public void deleteByID_whenWrongId() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
@@ -57,7 +44,7 @@ public class UsersApiTest extends AbstractIntegrationTest {
                 .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken()));
 
         //then
-        result.andExpect(status().isForbidden());
+        result.andExpect(status().isNotFound());
     }
 
     @Test
@@ -75,5 +62,23 @@ public class UsersApiTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void deleteById_withAdminAccess() throws Exception {
+        //given
+        final User savedUser = createUser(generateSignUpRequest());
+
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        createAdmin(signUpRequest);
+
+        final TokenResponse adminsToken = createSignIn(signUpRequest);
+
+        //when
+        final ResultActions result = mockMvc.perform(delete(USER_URL + "/{id}", savedUser.getId())
+                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken()));
+
+        //then
+        result.andExpect(status().isNoContent());
     }
 }

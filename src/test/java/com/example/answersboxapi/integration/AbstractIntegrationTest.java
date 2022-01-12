@@ -1,6 +1,7 @@
 package com.example.answersboxapi.integration;
 
 import com.example.answersboxapi.entity.UserEntity;
+import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
@@ -72,12 +73,25 @@ public class AbstractIntegrationTest {
     }
 
     protected User createUser(final SignUpRequest signUpRequest) {
+        final UserEntity userToSave = createEntity(signUpRequest);
+
+        return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
+    }
+
+    protected User createAdmin(final SignUpRequest signUpRequest) {
+        final UserEntity userToSave = createEntity(signUpRequest);
+        userToSave.setRole(UserEntityRole.ROLE_ADMIN);
+
+        return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
+    }
+
+    private UserEntity createEntity(final SignUpRequest signUpRequest){
         final String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
 
         final UserEntity userToSave = generateUser();
         userToSave.setEmail(signUpRequest.getEmail());
         userToSave.setPassword(encodedPassword);
 
-        return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
+        return userToSave;
     }
 }

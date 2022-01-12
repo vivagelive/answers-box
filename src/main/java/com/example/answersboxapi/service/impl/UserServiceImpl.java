@@ -65,8 +65,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteById(final UUID id) {
-        checkAccess(id);
-        if (existById(id)){
+        if (existById(id)) {
+            checkAccess(id);
             userRepository.deleteById(id);
         } else {
             throw new EntityNotFoundException(String.format("User with id: %s doesnt found", id));
