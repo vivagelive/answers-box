@@ -33,8 +33,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AbstractIntegrationTest {
 
     protected static final String AUTHORIZATION = "Authorization";
-    protected static final String AUTH_URL = "/api/v1/auth";
     protected static final String TOKEN_PREFIX = "Bearer ";
+
+    protected static final String AUTH_URL = "/api/v1/auth";
+    protected static final String USER_URL = "/api/v1/users";
 
     @Autowired
     protected MockMvc mockMvc;

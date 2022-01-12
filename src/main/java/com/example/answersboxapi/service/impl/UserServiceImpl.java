@@ -2,6 +2,7 @@ package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
+import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.UnauthorizedException;
 import com.example.answersboxapi.model.User;
@@ -17,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.UUID;
 
+import static com.example.answersboxapi.enums.UserRole.ROLE_ADMIN;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.SecurityUtils.getCurrentUser;
 
@@ -58,6 +61,27 @@ public class UserServiceImpl implements UserService {
         return USER_MAPPER.toModel(
                 userRepository.findByEmail(userDetails.getEmail()).orElseThrow(
                         () -> new EntityNotFoundException(String.format("User with email %s not found", userDetails.getEmail()))));
+    }
+
+    @Override
+    public void deleteById(final UUID id) {
+        checkAccess(id);
+        if (existById(id)){
+            userRepository.deleteById(id);
+        } else {
+            throw new EntityNotFoundException(String.format("User with id: %s doesnt found", id));
+        }
+    }
+
+    private void checkAccess(final UUID id) {
+        final User currentUser = getCurrent();
+        if (!(currentUser.getId().equals(id) || currentUser.getRole().equals(ROLE_ADMIN))) {
+            throw new AccessDeniedException(String.format("Low access to delete user with id: %s", id));
+        }
+    }
+
+    private boolean existById(final UUID id) {
+        return userRepository.existsById(id);
     }
 
     @Override
