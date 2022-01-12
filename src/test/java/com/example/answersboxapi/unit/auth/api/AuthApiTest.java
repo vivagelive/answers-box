@@ -1,4 +1,4 @@
-package com.example.answersboxapi.unit;
+package com.example.answersboxapi.unit.auth.api;
 
 import com.example.answersboxapi.exceptions.UnexpectedException;
 import com.example.answersboxapi.model.User;
@@ -6,6 +6,7 @@ import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.service.AuthService;
+import com.example.answersboxapi.unit.AbstractUnitTest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
