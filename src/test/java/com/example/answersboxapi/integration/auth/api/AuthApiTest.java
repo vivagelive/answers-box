@@ -1,5 +1,6 @@
-package com.example.answersboxapi.integration;
+package com.example.answersboxapi.integration.auth.api;
 
+import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
