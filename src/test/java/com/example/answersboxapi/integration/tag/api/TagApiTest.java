@@ -56,7 +56,7 @@ public class TagApiTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void create_whenForbidden() throws Exception {
+    public void create_whenNotSignedIn() throws Exception {
         //given
         final TagRequest tagRequest = generateTagRequest();
 
