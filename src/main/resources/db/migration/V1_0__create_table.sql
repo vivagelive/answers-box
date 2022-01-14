@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS public.question_details
 CREATE TABLE IF NOT EXISTS public.tag
 (
     id   uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name text NOT NULL
+    name text NOT NULL UNIQUE 
 );
 
 CREATE TABLE IF NOT EXISTS public.tag_details

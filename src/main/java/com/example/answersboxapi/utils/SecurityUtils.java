@@ -1,5 +1,6 @@
 package com.example.answersboxapi.utils;
 
+import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.UserDetailsImpl;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,5 +15,10 @@ public class SecurityUtils {
             return (UserDetailsImpl) auth;
         }
         return null;
+    }
+
+    public static boolean isAdmin(){
+        final UserDetailsImpl userDetails = getCurrentUser();
+        return (userDetails != null && userDetails.getRole().equals(UserEntityRole.ROLE_ADMIN));
     }
 }

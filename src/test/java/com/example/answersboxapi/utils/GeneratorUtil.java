@@ -5,6 +5,7 @@ import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenRequest;
+import com.example.answersboxapi.model.tag.TagRequest;
 import com.github.javafaker.Faker;
 
 import java.time.Instant;
@@ -72,6 +73,12 @@ public class GeneratorUtil {
     public static TokenRequest generateTokenRequest(final String accessToken) {
         return TokenRequest.builder()
                 .token(accessToken)
+                .build();
+    }
+
+    public static TagRequest generateTagRequest() {
+        return TagRequest.builder()
+                .name(FAKER.name().title())
                 .build();
     }
 }
