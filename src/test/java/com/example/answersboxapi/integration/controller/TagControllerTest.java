@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import static com.example.answersboxapi.utils.GeneratorUtil.generateSignUpRequest;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateTagRequest;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -77,5 +77,27 @@ public class TagControllerTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void create_whenDuplicate() throws Exception {
+        //given
+        final TagRequest tagRequest = generateTagRequest();
+
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        createAdmin(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        //when
+        createTag(token, tagRequest);
+
+        final ResultActions result = mockMvc.perform(post(TAG_URL)
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(tagRequest)));
+
+        //then
+        result.andExpect(status().isUnprocessableEntity());
     }
 }

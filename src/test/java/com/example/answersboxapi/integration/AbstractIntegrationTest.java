@@ -7,6 +7,7 @@ import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.tag.Tag;
+import com.example.answersboxapi.model.tag.TagRequest;
 import com.example.answersboxapi.repository.TagRepository;
 import com.example.answersboxapi.repository.UserRepository;
 import com.example.answersboxapi.utils.PostgresInitializer;
@@ -104,5 +105,14 @@ public class AbstractIntegrationTest {
     protected Tag createTagFromResponse(final MvcResult result) throws Exception {
         final String tagResponse = result.getResponse().getContentAsString();
         return objectMapper.readValue(tagResponse, Tag.class);
+    }
+
+    protected void createTag(final TokenResponse token, final TagRequest tagRequest) throws Exception {
+         mockMvc.perform(post(TAG_URL)
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(tagRequest)))
+                        .andExpect(status().isCreated())
+                        .andReturn();
     }
 }

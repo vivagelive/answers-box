@@ -2,6 +2,7 @@ package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.entity.TagEntity;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
+import com.example.answersboxapi.exceptions.EntityAlreadyProcessedException;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
 import com.example.answersboxapi.repository.TagRepository;
@@ -22,7 +23,7 @@ public class TagServiceImpl implements TagService {
     @Override
     @Transactional
     public Tag create(final TagRequest tagRequest) {
-        if (isAdmin()) {
+        if (isAdmin() && !existsByName(tagRequest.getName())) {
             final TagEntity tagEntity = TagEntity.builder()
                     .name(tagRequest.getName())
                     .build();
@@ -31,5 +32,12 @@ public class TagServiceImpl implements TagService {
         } else {
             throw new AccessDeniedException("Low access to create tag");
         }
+    }
+
+    private boolean existsByName(final String name) {
+       if (tagRepository.findByName(name)) {
+           throw new EntityAlreadyProcessedException(String.format("Tag: %s already exist", name));
+       }
+       return false;
     }
 }
