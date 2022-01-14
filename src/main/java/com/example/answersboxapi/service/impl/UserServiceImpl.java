@@ -20,9 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.UUID;
 
-import static com.example.answersboxapi.enums.UserRole.ROLE_ADMIN;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.SecurityUtils.getCurrentUser;
+import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 
 @Service
 @RequiredArgsConstructor
@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
 
     private void checkAccess(final UUID id) {
         final User currentUser = getCurrent();
-        if (!(currentUser.getId().equals(id) || currentUser.getRole().equals(ROLE_ADMIN))) {
+        if (!(currentUser.getId().equals(id) || isAdmin())) {
             throw new AccessDeniedException(String.format("Low access to delete user with id: %s", id));
         }
     }
