@@ -6,6 +6,7 @@ import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
+import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.repository.TagRepository;
 import com.example.answersboxapi.repository.UserRepository;
 import com.example.answersboxapi.utils.PostgresInitializer;
@@ -65,7 +66,7 @@ public class AbstractIntegrationTest {
         return USER_MAPPER.toModel(userRepository.saveAndFlush(generateUser()));
     }
 
-    protected TokenResponse createSignIn(final SignUpRequest signedUpUser) throws Exception{
+    protected TokenResponse createSignIn(final SignUpRequest signedUpUser) throws Exception {
         final SignInRequest signInRequest = generateSignInRequest(signedUpUser.getEmail(), signedUpUser.getPassword());
 
         final MvcResult result = mockMvc.perform(post(AUTH_URL + "/sign-in")
@@ -90,7 +91,7 @@ public class AbstractIntegrationTest {
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
 
-    private UserEntity createEntity(final SignUpRequest signUpRequest){
+    private UserEntity createEntity(final SignUpRequest signUpRequest) {
         final String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
 
         final UserEntity userToSave = generateUser();
@@ -98,5 +99,10 @@ public class AbstractIntegrationTest {
         userToSave.setPassword(encodedPassword);
 
         return userToSave;
+    }
+
+    protected Tag createTagFromResponse(final MvcResult result) throws Exception {
+        final String tagResponse = result.getResponse().getContentAsString();
+        return objectMapper.readValue(tagResponse, Tag.class);
     }
 }

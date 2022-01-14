@@ -1,19 +1,22 @@
-package com.example.answersboxapi.integration.tag.api;
+package com.example.answersboxapi.integration.controller;
 
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
+import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static com.example.answersboxapi.utils.GeneratorUtil.generateSignUpRequest;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateTagRequest;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class TagApiTest extends AbstractIntegrationTest {
+public class TagControllerTest extends AbstractIntegrationTest {
 
     @Test
     public void create_happyPath() throws Exception {
@@ -26,13 +29,17 @@ public class TagApiTest extends AbstractIntegrationTest {
         final TokenResponse token = createSignIn(signUpRequest);
 
         //when
-        final ResultActions result = mockMvc.perform(post(TAG_URL + "/create")
+        final MvcResult result = mockMvc.perform(post(TAG_URL)
                 .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsBytes(tagRequest)));
+                .content(objectMapper.writeValueAsBytes(tagRequest)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        final Tag tag = createTagFromResponse(result);
 
         //then
-        result.andExpect(status().isCreated());
+        assertEquals(tagRequest.getName(), tag.getName());
     }
 
     @Test
@@ -46,7 +53,7 @@ public class TagApiTest extends AbstractIntegrationTest {
         final TokenResponse token = createSignIn(signUpRequest);
 
         //when
-        final ResultActions result = mockMvc.perform(post(TAG_URL + "/create")
+        final ResultActions result = mockMvc.perform(post(TAG_URL)
                 .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsBytes(tagRequest)));
@@ -56,7 +63,7 @@ public class TagApiTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void create_whenForbidden() throws Exception {
+    public void create_whenNotSignedIn() throws Exception {
         //given
         final TagRequest tagRequest = generateTagRequest();
 
@@ -64,7 +71,7 @@ public class TagApiTest extends AbstractIntegrationTest {
         createUser(signUpRequest);
 
         //when
-        final ResultActions result = mockMvc.perform(post(TAG_URL + "/create")
+        final ResultActions result = mockMvc.perform(post(TAG_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsBytes(tagRequest)));
 

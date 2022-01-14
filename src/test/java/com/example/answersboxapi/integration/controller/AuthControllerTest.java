@@ -1,4 +1,4 @@
-package com.example.answersboxapi.integration.auth.api;
+package com.example.answersboxapi.integration.controller;
 
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.User;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class AuthApiTest extends AbstractIntegrationTest {
+public class AuthControllerTest extends AbstractIntegrationTest {
 
     @Test
     public void signUp_happyPath() throws Exception {

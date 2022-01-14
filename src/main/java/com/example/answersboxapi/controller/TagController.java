@@ -21,7 +21,7 @@ public class TagController {
 
     private final TagService tagService;
 
-    @PostMapping("/create")
+    @PostMapping
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "create")
     public ResponseEntity<Tag> create(@RequestBody final TagRequest tagRequest) {
         return new ResponseEntity<>(tagService.create(tagRequest), HttpStatus.CREATED);

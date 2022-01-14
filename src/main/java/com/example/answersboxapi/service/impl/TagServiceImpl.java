@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
+import static com.example.answersboxapi.mapper.TagMapper.TAG_MAPPER;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 
 @Service
@@ -27,7 +27,7 @@ public class TagServiceImpl implements TagService {
                     .name(tagRequest.getName())
                     .build();
 
-            return USER_MAPPER.toModel(tagRepository.saveAndFlush(tagEntity));
+            return TAG_MAPPER.toModel(tagRepository.saveAndFlush(tagEntity));
         } else {
             throw new AccessDeniedException("Low access to create tag");
         }

@@ -1,4 +1,4 @@
-package com.example.answersboxapi.integration.users.api;
+package com.example.answersboxapi.integration.controller;
 
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.User;
@@ -13,7 +13,7 @@ import static com.example.answersboxapi.utils.GeneratorUtil.generateSignUpReques
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class UsersApiTest extends AbstractIntegrationTest {
+public class UserControllerTest extends AbstractIntegrationTest {
 
     @Test
     public void deleteById_happyPath() throws Exception {
