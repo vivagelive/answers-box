@@ -4,7 +4,6 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,14 +42,6 @@ public class QuestionEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @Builder.Default
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "tag_details",
-            joinColumns = {@JoinColumn(name = "question_id")},
-            inverseJoinColumns = {@JoinColumn(name = "tag_id")}
-    )
-    private List<TagEntity> tags = new ArrayList<>();
+    @OneToMany(mappedBy = "questionId", fetch = FetchType.LAZY, cascade = CascadeType.ALL )
+    private List<TagDetailsEntity> tagDetails;
 }
