@@ -1,7 +1,7 @@
 package com.example.answersboxapi.controller;
 
 import com.example.answersboxapi.config.SwaggerConfig;
-import com.example.answersboxapi.model.User;
+import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;

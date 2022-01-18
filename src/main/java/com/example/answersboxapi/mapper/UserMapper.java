@@ -1,7 +1,7 @@
 package com.example.answersboxapi.mapper;
 
 import com.example.answersboxapi.entity.UserEntity;
-import com.example.answersboxapi.model.User;
+import com.example.answersboxapi.model.user.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

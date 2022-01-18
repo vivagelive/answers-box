@@ -5,6 +5,7 @@ import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenRequest;
+import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.tag.TagRequest;
 import com.github.javafaker.Faker;
 
@@ -79,6 +80,20 @@ public class GeneratorUtil {
     public static TagRequest generateTagRequest() {
         return TagRequest.builder()
                 .name(FAKER.name().title())
+                .build();
+    }
+
+    public static QuestionRequest generateQuestionRequest() {
+        return QuestionRequest.builder()
+                .title(FAKER.name().title())
+                .description(FAKER.name().name())
+                .build();
+    }
+
+    public static QuestionRequest generateQuestionWithEmptyFields() {
+        return QuestionRequest.builder()
+                .title("")
+                .description("")
                 .build();
     }
 }

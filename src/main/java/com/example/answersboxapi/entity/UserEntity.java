@@ -11,6 +11,7 @@ import org.hibernate.annotations.TypeDef;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -54,4 +55,7 @@ public class UserEntity {
     @Type(type = "pgsql_enum")
     @Column(name = "role", nullable = false)
     private UserEntityRole role;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<QuestionEntity> questions;
 }

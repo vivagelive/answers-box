@@ -1,11 +1,10 @@
 package com.example.answersboxapi.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -23,4 +22,10 @@ public class TagEntity {
 
     @Column(name = "name", nullable = false, unique = true)
     private String name;
+
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @ManyToMany(mappedBy = "tags")
+    private List<QuestionEntity> questions = new ArrayList<>();
 }

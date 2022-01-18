@@ -2,12 +2,15 @@ package com.example.answersboxapi.integration;
 
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
-import com.example.answersboxapi.model.User;
+import com.example.answersboxapi.model.question.Question;
+import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
+import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.repository.TagRepository;
 import com.example.answersboxapi.repository.UserRepository;
 import com.example.answersboxapi.utils.PostgresInitializer;
@@ -42,6 +45,7 @@ public class AbstractIntegrationTest {
     protected static final String AUTH_URL = "/api/v1/auth";
     protected static final String TAG_URL = "/api/v1/tags";
     protected static final String USER_URL = "/api/v1/users";
+    protected static final String QUESTION_URL = "/api/v1/question";
 
     @Autowired
     protected MockMvc mockMvc;

@@ -5,7 +5,7 @@ import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.UnauthorizedException;
-import com.example.answersboxapi.model.User;
+import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.model.UserDetailsImpl;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.repository.UserRepository;
