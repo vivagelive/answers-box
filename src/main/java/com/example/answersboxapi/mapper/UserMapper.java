@@ -6,6 +6,7 @@ import com.example.answersboxapi.model.user.User;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,6 +23,9 @@ public interface UserMapper {
     User toModel(final UserEntity userEntity);
 
     default List<UUID> questionsToIds(final List<QuestionEntity> questions) {
-        return questions.stream().map(QuestionEntity::getId).collect(Collectors.toList());
+        if (questions != null) {
+            return questions.stream().map(QuestionEntity::getId).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 }

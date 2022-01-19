@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Collections;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
@@ -40,7 +39,6 @@ public class QuestionServiceImpl implements QuestionService {
                     .description(questionRequest.getDescription())
                     .user(USER_MAPPER.toEntity(currentUser))
                     .createdAt(Instant.now())
-                    .tagDetails(Collections.emptyList())
                     .build();
 
             return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(questionEntity));

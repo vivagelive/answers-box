@@ -44,7 +44,6 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(requestUser.getPassword()))
                 .createdAt(Instant.now())
                 .role(UserEntityRole.ROLE_USER)
-                .questions(Collections.emptyList())
                 .build();
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));

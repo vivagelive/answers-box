@@ -2,15 +2,12 @@ package com.example.answersboxapi.integration;
 
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
-import com.example.answersboxapi.model.question.Question;
-import com.example.answersboxapi.model.question.QuestionRequest;
-import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
-import com.example.answersboxapi.repository.QuestionRepository;
+import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.repository.TagRepository;
 import com.example.answersboxapi.repository.UserRepository;
 import com.example.answersboxapi.utils.PostgresInitializer;
@@ -26,8 +23,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.Collections;
 
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateSignInRequest;
@@ -70,10 +65,7 @@ public class AbstractIntegrationTest {
     }
 
     protected User createUser() {
-        final UserEntity userToSave = generateUser();
-        userToSave.setQuestions(Collections.emptyList());
-
-        return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
+        return USER_MAPPER.toModel(userRepository.saveAndFlush(generateUser()));
     }
 
     protected TokenResponse createSignIn(final SignUpRequest signedUpUser) throws Exception {
@@ -90,7 +82,6 @@ public class AbstractIntegrationTest {
 
     protected User createUser(final SignUpRequest signUpRequest) {
         final UserEntity userToSave = createEntity(signUpRequest);
-        userToSave.setQuestions(Collections.emptyList());
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
@@ -98,7 +89,6 @@ public class AbstractIntegrationTest {
     protected User createAdmin(final SignUpRequest signUpRequest) {
         final UserEntity userToSave = createEntity(signUpRequest);
         userToSave.setRole(UserEntityRole.ROLE_ADMIN);
-        userToSave.setQuestions(Collections.emptyList());
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
