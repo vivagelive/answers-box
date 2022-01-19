@@ -1,6 +1,5 @@
 package com.example.answersboxapi.model.question;
 
-import com.example.answersboxapi.entity.TagEntity;
 import lombok.Data;
 
 import java.time.Instant;
@@ -18,5 +17,5 @@ public class Question {
     private Instant updatedAt;
     private Instant deletedAt;
     private UUID userId;
-    private List<TagEntity> tags;
+    private List<UUID> tagDetailIds;
 }

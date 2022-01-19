@@ -27,6 +27,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.Collections;
+
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateSignInRequest;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateUser;
@@ -68,7 +70,10 @@ public class AbstractIntegrationTest {
     }
 
     protected User createUser() {
-        return USER_MAPPER.toModel(userRepository.saveAndFlush(generateUser()));
+        final UserEntity userToSave = generateUser();
+        userToSave.setQuestions(Collections.emptyList());
+
+        return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
 
     protected TokenResponse createSignIn(final SignUpRequest signedUpUser) throws Exception {
@@ -85,6 +90,7 @@ public class AbstractIntegrationTest {
 
     protected User createUser(final SignUpRequest signUpRequest) {
         final UserEntity userToSave = createEntity(signUpRequest);
+        userToSave.setQuestions(Collections.emptyList());
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
@@ -92,6 +98,7 @@ public class AbstractIntegrationTest {
     protected User createAdmin(final SignUpRequest signUpRequest) {
         final UserEntity userToSave = createEntity(signUpRequest);
         userToSave.setRole(UserEntityRole.ROLE_ADMIN);
+        userToSave.setQuestions(Collections.emptyList());
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }

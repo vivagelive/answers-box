@@ -5,9 +5,9 @@ import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.UnauthorizedException;
-import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.model.UserDetailsImpl;
 import com.example.answersboxapi.model.auth.SignUpRequest;
+import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.repository.UserRepository;
 import com.example.answersboxapi.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.UUID;
 
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
@@ -43,6 +44,7 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(requestUser.getPassword()))
                 .createdAt(Instant.now())
                 .role(UserEntityRole.ROLE_USER)
+                .questions(Collections.emptyList())
                 .build();
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));

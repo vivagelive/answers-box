@@ -3,7 +3,6 @@ package com.example.answersboxapi.service.impl;
 import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.InvalidInputDataException;
-import com.example.answersboxapi.mapper.UserMapper;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.user.User;
@@ -14,9 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Collections;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
-import static com.example.answersboxapi.mapper.UserMapper.*;
+import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 
 @Service
@@ -40,6 +40,7 @@ public class QuestionServiceImpl implements QuestionService {
                     .description(questionRequest.getDescription())
                     .user(USER_MAPPER.toEntity(currentUser))
                     .createdAt(Instant.now())
+                    .tagDetails(Collections.emptyList())
                     .build();
 
             return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(questionEntity));
