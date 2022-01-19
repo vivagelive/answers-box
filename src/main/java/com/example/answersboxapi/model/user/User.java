@@ -1,9 +1,10 @@
-package com.example.answersboxapi.model;
+package com.example.answersboxapi.model.user;
 
 import com.example.answersboxapi.enums.UserRole;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -18,4 +19,5 @@ public class User {
     private Instant updatedAt;
     private Instant deletedAt;
     private UserRole role;
+    private List<UUID> questions;
 }

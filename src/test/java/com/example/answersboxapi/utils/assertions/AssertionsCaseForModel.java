@@ -1,6 +1,6 @@
 package com.example.answersboxapi.utils.assertions;
 
-import com.example.answersboxapi.model.User;
+import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 
 import static org.junit.jupiter.api.Assertions.*;

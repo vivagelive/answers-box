@@ -1,7 +1,7 @@
 package com.example.answersboxapi.service;
 
 import com.example.answersboxapi.model.auth.SignUpRequest;
-import com.example.answersboxapi.model.User;
+import com.example.answersboxapi.model.user.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.UUID;

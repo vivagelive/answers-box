@@ -1,7 +1,6 @@
 package com.example.answersboxapi.controller;
 
 import com.example.answersboxapi.config.SwaggerConfig;
-import com.example.answersboxapi.model.User;
 import com.example.answersboxapi.service.UserService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;

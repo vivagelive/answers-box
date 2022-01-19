@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -14,17 +13,18 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "tag")
-public class TagEntity {
+@Table(name = "tag_details")
+public class TagDetailsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @Column(name = "name", nullable = false, unique = true)
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "question_id")
+    private QuestionEntity questionId;
 
-    @OneToMany(mappedBy = "tagId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<TagDetailsEntity> tags;
+    @ManyToOne
+    @JoinColumn(name = "tag_id", nullable = false)
+    private TagEntity tagId;
 }

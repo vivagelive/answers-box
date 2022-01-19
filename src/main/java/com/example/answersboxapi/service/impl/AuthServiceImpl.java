@@ -4,7 +4,7 @@ import com.example.answersboxapi.config.JwtTokenProvider;
 import com.example.answersboxapi.exceptions.EntityAlreadyProcessedException;
 import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.UnauthorizedException;
-import com.example.answersboxapi.model.User;
+import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
