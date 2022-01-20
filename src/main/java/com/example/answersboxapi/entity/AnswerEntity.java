@@ -12,22 +12,23 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "question")
-public class QuestionEntity {
+@Table(name = "answer")
+public class AnswerEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
     private UUID id;
 
+    @Column(name = "text", nullable = false)
+    private String text;
+
     @Column(name = "rating", nullable = false)
     private Integer rating;
 
-    @Column(name = "title", nullable = false)
-    private String title;
-
-    @Column(name = "description", nullable = false)
-    private String description;
+    @ManyToOne
+    @JoinColumn (name = "user_id", nullable = false)
+    private UserEntity user;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -38,13 +39,6 @@ public class QuestionEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
-
-    @OneToMany(mappedBy = "questionId", fetch = FetchType.LAZY, cascade = CascadeType.ALL )
-    private List<TagDetailsEntity> tagDetails;
-
-    @OneToMany(mappedBy = "questionId", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "answerId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<QuestionDetailsEntity> questionDetails;
 }

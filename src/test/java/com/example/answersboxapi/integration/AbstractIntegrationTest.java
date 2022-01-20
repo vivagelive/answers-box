@@ -39,6 +39,7 @@ public class AbstractIntegrationTest {
     protected static final String AUTHORIZATION = "Authorization";
     protected static final String TOKEN_PREFIX = "Bearer ";
 
+    protected static final String ANSWER_URL = "/api/v1/answer";
     protected static final String AUTH_URL = "/api/v1/auth";
     protected static final String TAG_URL = "/api/v1/tags";
     protected static final String USER_URL = "/api/v1/users";

@@ -16,6 +16,9 @@ public interface QuestionMapper {
 
     QuestionMapper QUESTION_MAPPER = Mappers.getMapper(QuestionMapper.class);
 
+    @Mapping(target = "user.id", source = "userId")
+    @Mapping(target = "tagDetails", ignore = true)
+    @Mapping(target = "questionDetails", ignore = true)
     QuestionEntity toEntity(final Question questionEntityDto);
 
     @Mapping(source = "user.id", target = "userId")

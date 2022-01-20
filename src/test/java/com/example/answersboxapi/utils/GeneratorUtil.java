@@ -2,6 +2,7 @@ package com.example.answersboxapi.utils;
 
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
+import com.example.answersboxapi.model.answer.AnswerRequest;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenRequest;
@@ -94,6 +95,18 @@ public class GeneratorUtil {
         return QuestionRequest.builder()
                 .title("")
                 .description("")
+                .build();
+    }
+
+    public static AnswerRequest generateAnswerRequest() {
+        return AnswerRequest.builder()
+                .text(FAKER.name().title())
+                .build();
+    }
+
+    public static AnswerRequest generateEmptyAnswer() {
+        return AnswerRequest.builder()
+                .text("")
                 .build();
     }
 }
