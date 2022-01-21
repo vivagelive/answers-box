@@ -26,6 +26,6 @@ public class QuestionDetailsEntity {
     private QuestionEntity questionId;
 
     @ManyToOne
-    @JoinColumn(name = "answer_id", nullable = false)
-    private AnswerEntity answerId;
+    @JoinColumn(name = "tag_id", nullable = false)
+    private TagEntity tagId;
 }

@@ -43,8 +43,8 @@ public class QuestionEntity {
     private UserEntity user;
 
     @OneToMany(mappedBy = "questionId", fetch = FetchType.LAZY, cascade = CascadeType.ALL )
-    private List<TagDetailsEntity> tagDetails;
-
-    @OneToMany(mappedBy = "questionId", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private List<QuestionDetailsEntity> questionDetails;
+
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<AnswerEntity> answers;
 }

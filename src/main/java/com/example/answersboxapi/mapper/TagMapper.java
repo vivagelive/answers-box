@@ -11,7 +11,7 @@ public interface TagMapper {
 
     TagMapper TAG_MAPPER = Mappers.getMapper(TagMapper.class);
 
-    @Mapping(target = "tags", ignore = true)
+    @Mapping(target = "questionDetails", ignore = true)
     TagEntity toEntity(final Tag tag);
 
     Tag toModel(final TagEntity tagEntity);

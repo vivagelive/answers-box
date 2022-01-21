@@ -1,11 +1,11 @@
-package com.example.answersboxapi.model.tagDetails;
+package com.example.answersboxapi.model.question;
 
 import lombok.Data;
 
 import java.util.UUID;
 
 @Data
-public class TagDetails {
+public class QuestionDetails {
 
     private UUID id;
     private UUID questionId;

@@ -27,7 +27,7 @@ public class GeneratorUtil {
                 .firstName(FAKER.name().firstName())
                 .lastName(FAKER.name().lastName())
                 .email(FAKER.internet().emailAddress())
-                .password(FAKER.internet().password(true))
+                .password(FAKER.internet().password(true)+1)
                 .createdAt(Instant.now().truncatedTo(ChronoUnit.SECONDS))
                 .role(UserEntityRole.ROLE_USER)
                 .build();
@@ -38,7 +38,7 @@ public class GeneratorUtil {
                 .email(FAKER.internet().emailAddress())
                 .firstName(FAKER.name().firstName())
                 .lastName(FAKER.name().lastName())
-                .password(FAKER.internet().password(true))
+                .password(FAKER.internet().password(true)+1)
                 .build();
     }
 

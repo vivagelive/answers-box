@@ -26,5 +26,5 @@ public class TagEntity {
     private String name;
 
     @OneToMany(mappedBy = "tagId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<TagDetailsEntity> tags;
+    private List<QuestionDetailsEntity> questionDetails;
 }

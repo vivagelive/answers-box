@@ -1,7 +1,8 @@
 package com.example.answersboxapi.mapper;
 
+import com.example.answersboxapi.entity.AnswerEntity;
+import com.example.answersboxapi.entity.QuestionDetailsEntity;
 import com.example.answersboxapi.entity.QuestionEntity;
-import com.example.answersboxapi.entity.TagDetailsEntity;
 import com.example.answersboxapi.model.question.Question;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
@@ -17,17 +18,25 @@ public interface QuestionMapper {
     QuestionMapper QUESTION_MAPPER = Mappers.getMapper(QuestionMapper.class);
 
     @Mapping(target = "user.id", source = "userId")
-    @Mapping(target = "tagDetails", ignore = true)
     @Mapping(target = "questionDetails", ignore = true)
+    @Mapping(target = "answers", ignore = true)
     QuestionEntity toEntity(final Question questionEntityDto);
 
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(target = "tagDetailIds", expression = "java(tagDetailsToIds(questionEntity.getTagDetails()))")
+    @Mapping(target = "questionDetailIds", expression = "java(questionsDetailsToIds(questionEntity.getQuestionDetails()))")
+    @Mapping(target = "answers", expression = "java(answersToIds(questionEntity.getAnswers()))")
     Question toModel(final QuestionEntity questionEntity);
 
-    default List<UUID> tagDetailsToIds(final List<TagDetailsEntity> tagDetails) {
-        if (tagDetails != null) {
-            return tagDetails.stream().map(TagDetailsEntity::getId).collect(Collectors.toList());
+    default List<UUID> questionsDetailsToIds(final List<QuestionDetailsEntity> questionDetails) {
+        if (questionDetails != null) {
+            return questionDetails.stream().map(QuestionDetailsEntity::getId).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    default List<UUID> answersToIds(final List<AnswerEntity> answers) {
+        if (answers != null) {
+            return answers.stream().map(AnswerEntity::getId).collect(Collectors.toList());
         }
         return Collections.emptyList();
     }

@@ -1,6 +1,7 @@
 package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.entity.AnswerEntity;
+import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.InvalidInputDataException;
 import com.example.answersboxapi.model.answer.Answer;
@@ -8,11 +9,13 @@ import com.example.answersboxapi.model.answer.AnswerRequest;
 import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.repository.AnswerRepository;
 import com.example.answersboxapi.service.AnswerService;
+import com.example.answersboxapi.service.QuestionService;
 import com.example.answersboxapi.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
@@ -24,6 +27,7 @@ public class AnswerServiceImpl implements AnswerService {
 
     private final AnswerRepository answerRepository;
 
+    private final QuestionService questionService;
     private final UserService userService;
 
     @Override
@@ -38,6 +42,7 @@ public class AnswerServiceImpl implements AnswerService {
                     .rating(0)
                     .createdAt(Instant.now())
                     .user(USER_MAPPER.toEntity(currentUser))
+                    .question(getQuestion(answerRequest.getQuestionId()))
                     .build();
 
             return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(answerToSave));
@@ -51,5 +56,9 @@ public class AnswerServiceImpl implements AnswerService {
         if (answerRequest.getText().isEmpty()) {
             throw new InvalidInputDataException("Empty answer");
         }
+    }
+
+    private QuestionEntity getQuestion(final UUID id) {
+        return questionService.getById(id);
     }
 }

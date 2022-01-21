@@ -1,10 +1,12 @@
 package com.example.answersboxapi.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -39,6 +41,7 @@ public class AnswerEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    @OneToMany(mappedBy = "answerId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<QuestionDetailsEntity> questionDetails;
+    @ManyToOne
+    @JoinColumn(name = "question_id", nullable = false)
+    private QuestionEntity question;
 }
