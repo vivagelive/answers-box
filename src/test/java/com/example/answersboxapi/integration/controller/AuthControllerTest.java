@@ -138,6 +138,6 @@ public class AuthControllerTest extends AbstractIntegrationTest {
                         .content(objectMapper.writeValueAsString(tokenRequest)));
 
         //then
-        result.andExpect(status().isForbidden());
+        result.andExpect(status().isUnauthorized());
     }
 }

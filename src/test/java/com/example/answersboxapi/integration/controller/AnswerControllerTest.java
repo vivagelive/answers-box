@@ -20,7 +20,7 @@ import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class AnswerController extends AbstractIntegrationTest {
+public class AnswerControllerTest extends AbstractIntegrationTest {
 
     @Test
     public void create_happyPath() throws Exception {
@@ -63,7 +63,7 @@ public class AnswerController extends AbstractIntegrationTest {
                 .content(objectMapper.writeValueAsString(answerRequest)));
 
         //then
-        result.andExpect(status().isForbidden());
+        result.andExpect(status().isUnauthorized());
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.example.answersboxapi.mapper;
 import com.example.answersboxapi.entity.AnswerEntity;
 import com.example.answersboxapi.entity.QuestionDetailsEntity;
 import com.example.answersboxapi.entity.QuestionEntity;
+import com.example.answersboxapi.entity.TagEntity;
 import com.example.answersboxapi.model.question.Question;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
@@ -23,13 +24,16 @@ public interface QuestionMapper {
     QuestionEntity toEntity(final Question questionEntityDto);
 
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(target = "questionDetailIds", expression = "java(questionsDetailsToIds(questionEntity.getQuestionDetails()))")
+    @Mapping(target = "tagsIds", expression = "java(questionsDetailsToIds(questionEntity.getQuestionDetails()))")
     @Mapping(target = "answers", expression = "java(answersToIds(questionEntity.getAnswers()))")
     Question toModel(final QuestionEntity questionEntity);
 
     default List<UUID> questionsDetailsToIds(final List<QuestionDetailsEntity> questionDetails) {
         if (questionDetails != null) {
-            return questionDetails.stream().map(QuestionDetailsEntity::getId).collect(Collectors.toList());
+            return questionDetails.stream()
+                    .map(QuestionDetailsEntity::getTagId)
+                    .map(TagEntity::getId)
+                    .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }

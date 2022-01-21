@@ -76,7 +76,7 @@ public class TagControllerTest extends AbstractIntegrationTest {
                 .content(objectMapper.writeValueAsBytes(tagRequest)));
 
         //then
-        result.andExpect(status().isForbidden());
+        result.andExpect(status().isUnauthorized());
     }
 
     @Test

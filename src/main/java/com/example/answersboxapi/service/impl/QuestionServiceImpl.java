@@ -51,9 +51,9 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public QuestionEntity getById(final UUID id) {
-       return questionRepository.findById(id)
-               .orElseThrow(() -> new EntityNotFoundException(String.format("Question with id: %s not found", id)));
+    public Question getById(final UUID id) {
+       return QUESTION_MAPPER.toModel(questionRepository.findById(id)
+               .orElseThrow(() -> new EntityNotFoundException(String.format("Question with id: %s not found", id))));
     }
 
     private void checkQuestionFields(final QuestionRequest questionRequest) {

@@ -1,11 +1,11 @@
 package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.entity.AnswerEntity;
-import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.InvalidInputDataException;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
+import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.repository.AnswerRepository;
 import com.example.answersboxapi.service.AnswerService;
@@ -15,9 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.UUID;
 
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
+import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 
@@ -37,12 +37,14 @@ public class AnswerServiceImpl implements AnswerService {
         checkAnswerText(answerRequest);
 
         if (!isAdmin()) {
+            final Question foundQuestion = questionService.getById(answerRequest.getQuestionId());
+
             final AnswerEntity answerToSave = AnswerEntity.builder()
                     .text(answerRequest.getText())
                     .rating(0)
                     .createdAt(Instant.now())
                     .user(USER_MAPPER.toEntity(currentUser))
-                    .question(getQuestion(answerRequest.getQuestionId()))
+                    .question(QUESTION_MAPPER.toEntity(foundQuestion))
                     .build();
 
             return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(answerToSave));
@@ -56,9 +58,5 @@ public class AnswerServiceImpl implements AnswerService {
         if (answerRequest.getText().isEmpty()) {
             throw new InvalidInputDataException("Empty answer");
         }
-    }
-
-    private QuestionEntity getQuestion(final UUID id) {
-        return questionService.getById(id);
     }
 }
