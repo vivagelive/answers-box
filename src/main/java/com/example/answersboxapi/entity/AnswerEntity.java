@@ -1,10 +1,12 @@
 package com.example.answersboxapi.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -12,22 +14,23 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "question")
-public class QuestionEntity {
+@Table(name = "answer")
+public class AnswerEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false, insertable = false, updatable = false)
     private UUID id;
 
+    @Column(name = "text", nullable = false)
+    private String text;
+
     @Column(name = "rating", nullable = false)
     private Integer rating;
 
-    @Column(name = "title", nullable = false)
-    private String title;
-
-    @Column(name = "description", nullable = false)
-    private String description;
+    @ManyToOne
+    @JoinColumn (name = "user_id", nullable = false)
+    private UserEntity user;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -39,12 +42,6 @@ public class QuestionEntity {
     private Instant deletedAt;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
-
-    @OneToMany(mappedBy = "questionId", fetch = FetchType.LAZY, cascade = CascadeType.ALL )
-    private List<QuestionDetailsEntity> questionDetails;
-
-    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<AnswerEntity> answers;
+    @JoinColumn(name = "question_id", nullable = false)
+    private QuestionEntity question;
 }

@@ -2,6 +2,7 @@ package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
+import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.InvalidInputDataException;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
@@ -46,6 +48,12 @@ public class QuestionServiceImpl implements QuestionService {
         } else {
             throw new AccessDeniedException("Admin can`t create a question");
         }
+    }
+
+    @Override
+    public Question getById(final UUID id) {
+       return QUESTION_MAPPER.toModel(questionRepository.findById(id)
+               .orElseThrow(() -> new EntityNotFoundException(String.format("Question with id: %s not found", id))));
     }
 
     private void checkQuestionFields(final QuestionRequest questionRequest) {

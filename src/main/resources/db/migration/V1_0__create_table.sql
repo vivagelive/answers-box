@@ -30,33 +30,25 @@ CREATE TABLE IF NOT EXISTS public.question
 
 CREATE TABLE IF NOT EXISTS public.answer
 (
-    id         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    text       text                                   NOT NULL,
-    rating     bigint                                 NOT NULL,
-    user_id    uuid
-        CONSTRAINT user_id_fkey REFERENCES users (id) NOT NULL,
-    created_at timestamp        DEFAULT NOW()         NOT NULL,
-    updated_at timestamp,
-    deleted_at timestamp
-);
-
-CREATE TABLE IF NOT EXISTS public.question_details
-(
     id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    text        text                                         NOT NULL,
+    rating      bigint                                       NOT NULL,
+    user_id     uuid
+        CONSTRAINT user_id_fkey REFERENCES users (id)        NOT NULL,
     question_id uuid
         CONSTRAINT question_id_fkey REFERENCES question (id) NOT NULL,
-    answer_id   uuid
-        CONSTRAINT answer_id_fkey REFERENCES answer (id)     NOT NULL,
-    UNIQUE (question_id, answer_id)
+    created_at  timestamp        DEFAULT NOW()               NOT NULL,
+    updated_at  timestamp,
+    deleted_at  timestamp
 );
 
 CREATE TABLE IF NOT EXISTS public.tag
 (
     id   uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name text NOT NULL UNIQUE 
+    name text NOT NULL UNIQUE
 );
 
-CREATE TABLE IF NOT EXISTS public.tag_details
+CREATE TABLE IF NOT EXISTS public.question_details
 (
     id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     question_id uuid

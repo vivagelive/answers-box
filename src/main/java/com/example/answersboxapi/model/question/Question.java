@@ -17,5 +17,6 @@ public class Question {
     private Instant updatedAt;
     private Instant deletedAt;
     private UUID userId;
-    private List<UUID> tagDetailIds;
+    private List<UUID> tagsIds;
+    private List<UUID> answerIds;
 }

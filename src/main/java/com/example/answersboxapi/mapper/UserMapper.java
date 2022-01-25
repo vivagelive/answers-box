@@ -17,6 +17,7 @@ public interface UserMapper {
     UserMapper USER_MAPPER = Mappers.getMapper(UserMapper.class);
 
     @Mapping(target = "questions", ignore = true)
+    @Mapping(target = "answers", ignore = true)
     UserEntity toEntity(final User user);
 
     @Mapping(target = "questions", expression = "java(questionsToIds(userEntity.getQuestions()))")

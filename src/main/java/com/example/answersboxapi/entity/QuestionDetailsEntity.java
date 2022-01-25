@@ -13,15 +13,16 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "tag_details")
-public class TagDetailsEntity {
+@Table(name = "question_details")
+public class QuestionDetailsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id", nullable = false, updatable = false, insertable = false)
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "question_id")
+    @JoinColumn(name = "question_id", nullable = false)
     private QuestionEntity questionId;
 
     @ManyToOne

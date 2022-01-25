@@ -5,6 +5,8 @@ import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
+import com.example.answersboxapi.model.question.Question;
+import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
 import com.example.answersboxapi.model.user.User;
@@ -39,6 +41,7 @@ public class AbstractIntegrationTest {
     protected static final String AUTHORIZATION = "Authorization";
     protected static final String TOKEN_PREFIX = "Bearer ";
 
+    protected static final String ANSWER_URL = "/api/v1/answer";
     protected static final String AUTH_URL = "/api/v1/auth";
     protected static final String TAG_URL = "/api/v1/tags";
     protected static final String USER_URL = "/api/v1/users";
@@ -115,5 +118,16 @@ public class AbstractIntegrationTest {
                         .content(objectMapper.writeValueAsBytes(tagRequest)))
                         .andExpect(status().isCreated())
                         .andReturn();
+    }
+
+    protected Question createQuestion(final TokenResponse token, final QuestionRequest questionRequest) throws Exception {
+        final MvcResult result = mockMvc.perform(post(QUESTION_URL)
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionRequest)))
+                        .andExpect(status().isCreated())
+                        .andReturn();
+
+        return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Question.class);
     }
 }
