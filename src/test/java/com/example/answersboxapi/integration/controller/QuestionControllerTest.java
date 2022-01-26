@@ -92,33 +92,6 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void getAll_happyPath() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        final User savedUser = createUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final QuestionRequest questionToSave = generateQuestionRequest();
-        final Question savedQuestion = createQuestion(token, questionToSave);
-
-        //when
-        final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
-                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk());
-
-        final List<Question> foundQuestions =
-                objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), new TypeReference<>() {});
-
-        //then
-        assertAll(
-                () -> assertEquals(1, foundQuestions.size()),
-                () -> assertQuestionsListFields(foundQuestions, savedUser, savedQuestion)
-        );
-    }
-
-    @Test
     public void getAll_withUserAccess() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
@@ -127,13 +100,13 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final TokenResponse token = createSignIn(signUpRequest);
 
         final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        createDeletedQuestion(generateQuestionRequest(),savedUser);
+        createDeletedQuestion(generateQuestionRequest(), savedUser);
 
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk());
+                .andExpect(status().isOk());
 
         final List<Question> foundQuestions =
                 objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), new TypeReference<>() {});
@@ -164,7 +137,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk());
+                .andExpect(status().isOk());
 
         final List<Question> foundQuestions =
                 objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), new TypeReference<>() {});
