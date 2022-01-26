@@ -19,7 +19,7 @@ import static com.example.answersboxapi.utils.pagination.HeaderUtils.generateHea
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/question")
+@RequestMapping("/api/v1/questions")
 public class QuestionController {
 
     private final QuestionService questionService;

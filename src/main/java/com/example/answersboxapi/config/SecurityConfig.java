@@ -30,7 +30,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/configuration/ui", "/swagger-resources/**",
             "/configuration/security", "/swagger-ui.html", "/webjars/**"};
 
-    private static final String QUESTION_URL = "/api/v1/question/all";
+    private static final String QUESTION_URL = "/api/v1/questions/all";
 
     private final UserDetailsService userDetailsService;
 
