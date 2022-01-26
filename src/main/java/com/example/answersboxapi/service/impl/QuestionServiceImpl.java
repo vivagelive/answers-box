@@ -11,6 +11,7 @@ import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.service.QuestionService;
 import com.example.answersboxapi.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -19,6 +20,7 @@ import java.util.UUID;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
+import static com.example.answersboxapi.utils.pagination.PagingUtils.toPageRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -52,8 +54,13 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public Question getById(final UUID id) {
-       return QUESTION_MAPPER.toModel(questionRepository.findById(id)
-               .orElseThrow(() -> new EntityNotFoundException(String.format("Question with id: %s not found", id))));
+        return QUESTION_MAPPER.toModel(questionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Question with id: %s not found", id))));
+    }
+
+    @Override
+    public Page<Question> getAll(final int page, final int size) {
+        return questionRepository.findAll(toPageRequest(page, size), isAdmin()).map(QUESTION_MAPPER::toModel);
     }
 
     private void checkQuestionFields(final QuestionRequest questionRequest) {

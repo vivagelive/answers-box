@@ -25,7 +25,7 @@ public interface QuestionMapper {
 
     @Mapping(source = "user.id", target = "userId")
     @Mapping(target = "tagsIds", expression = "java(questionsDetailsToIds(questionEntity.getQuestionDetails()))")
-    @Mapping(target = "answers", expression = "java(answersToIds(questionEntity.getAnswers()))")
+    @Mapping(target = "answerIds", expression = "java(answersToIds(questionEntity.getAnswers()))")
     Question toModel(final QuestionEntity questionEntity);
 
     default List<UUID> questionsDetailsToIds(final List<QuestionDetailsEntity> questionDetails) {
