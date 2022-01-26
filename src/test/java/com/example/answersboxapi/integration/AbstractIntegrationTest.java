@@ -1,5 +1,6 @@
 package com.example.answersboxapi.integration;
 
+import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.auth.SignInRequest;
@@ -10,6 +11,7 @@ import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
 import com.example.answersboxapi.model.user.User;
+import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.repository.TagRepository;
 import com.example.answersboxapi.repository.UserRepository;
 import com.example.answersboxapi.utils.PostgresInitializer;
@@ -26,6 +28,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.Instant;
+
+import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateSignInRequest;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateUser;
@@ -55,6 +60,9 @@ public class AbstractIntegrationTest {
 
     @Autowired
     protected PasswordEncoder passwordEncoder;
+
+    @Autowired
+    protected QuestionRepository questionRepository;
 
     @Autowired
     protected UserRepository userRepository;
@@ -129,5 +137,18 @@ public class AbstractIntegrationTest {
                         .andReturn();
 
         return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Question.class);
+    }
+
+    protected Question createDeletedQuestion(final QuestionRequest questionRequest, final User savedUser) {
+        final QuestionEntity questionToSave = QuestionEntity.builder()
+                .rating(0)
+                .createdAt(Instant.now())
+                .deletedAt(Instant.now())
+                .title(questionRequest.getTitle())
+                .description(questionRequest.getDescription())
+                .user(USER_MAPPER.toEntity(savedUser))
+                .build();
+
+        return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(questionToSave));
     }
 }

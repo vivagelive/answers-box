@@ -30,6 +30,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/configuration/ui", "/swagger-resources/**",
             "/configuration/security", "/swagger-ui.html", "/webjars/**"};
 
+    private static final String QUESTION_URL = "/api/v1/question/all";
+
     private final UserDetailsService userDetailsService;
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -49,6 +51,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(AUTH_URL_LIST).permitAll()
                 .antMatchers(SWAGGER_URL_LIST).permitAll()
+                .antMatchers(QUESTION_URL).permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .logout()

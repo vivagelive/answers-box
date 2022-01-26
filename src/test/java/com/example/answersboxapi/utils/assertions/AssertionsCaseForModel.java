@@ -1,13 +1,13 @@
 package com.example.answersboxapi.utils.assertions;
 
 import com.example.answersboxapi.model.answer.Answer;
+import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.user.User;
-import com.example.answersboxapi.model.auth.SignUpRequest;
-import org.junit.jupiter.api.Assertions;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AssertionsCaseForModel {
 
@@ -33,10 +33,19 @@ public class AssertionsCaseForModel {
     }
 
     public static void assertAnswerFieldsEquals(final Answer createdAnswer, final User savedUser, final Question savedQuestion) {
-        Assertions.assertAll(
-                () -> Assertions.assertNotNull(createdAnswer),
-                () -> Assertions.assertEquals(createdAnswer.getUserId(), savedUser.getId()),
-                () -> Assertions.assertEquals(createdAnswer.getQuestionId(), savedQuestion.getId())
+        assertAll(
+                () -> assertNotNull(createdAnswer),
+                () -> assertEquals(createdAnswer.getUserId(), savedUser.getId()),
+                () -> assertEquals(createdAnswer.getQuestionId(), savedQuestion.getId())
+        );
+    }
+
+    public static void assertQuestionsListFields(final List<Question> foundQuestions, final User user, final Question savedQuestion) {
+        assertAll(
+                () -> assertEquals(user.getId(), foundQuestions.stream().findFirst().get().getUserId()),
+                () -> assertEquals(savedQuestion.getId(), foundQuestions.stream().findFirst().get().getId()),
+                () -> assertEquals(savedQuestion.getTitle(), foundQuestions.stream().findFirst().get().getTitle()),
+                () -> assertEquals(savedQuestion.getDescription(), foundQuestions.stream().findFirst().get().getDescription())
         );
     }
 }

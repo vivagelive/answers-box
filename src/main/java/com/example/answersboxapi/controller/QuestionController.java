@@ -7,12 +7,15 @@ import com.example.answersboxapi.service.QuestionService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+import static com.example.answersboxapi.utils.pagination.HeaderUtils.generateHeaders;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,5 +28,14 @@ public class QuestionController {
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "create")
     public ResponseEntity<Question> create(@RequestBody final QuestionRequest questionRequest) {
         return new ResponseEntity<>(questionService.create(questionRequest), HttpStatus.CREATED);
+    }
+
+    @GetMapping("/all")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "getAll")
+    public ResponseEntity<List<Question>> getAll(@RequestParam(defaultValue = "1") final int page, @RequestParam(defaultValue = "10") final int size) {
+        final Page<Question> foundQuestions = questionService.getAll(page, size);
+        final MultiValueMap<String, String> headers = generateHeaders(foundQuestions);
+
+        return new ResponseEntity<>(foundQuestions.getContent(), headers, HttpStatus.OK);
     }
 }
