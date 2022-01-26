@@ -6,6 +6,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface AnswerMapper {
 
@@ -18,4 +20,6 @@ public interface AnswerMapper {
     @Mapping(source = "user.id", target = "userId")
     @Mapping(target = "questionId", expression = "java(answerEntity.getQuestion().getId())")
     Answer toModel(final AnswerEntity answerEntity);
+
+    List<Answer> toModelList(final List<AnswerEntity> answersList);
 }

@@ -1,8 +1,11 @@
 package com.example.answersboxapi.integration;
 
+import com.example.answersboxapi.entity.AnswerEntity;
 import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
+import com.example.answersboxapi.model.answer.Answer;
+import com.example.answersboxapi.model.answer.AnswerRequest;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
@@ -11,6 +14,7 @@ import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
 import com.example.answersboxapi.model.user.User;
+import com.example.answersboxapi.repository.AnswerRepository;
 import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.repository.TagRepository;
 import com.example.answersboxapi.repository.UserRepository;
@@ -29,7 +33,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
+import java.util.UUID;
 
+import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateSignInRequest;
@@ -46,7 +52,7 @@ public class AbstractIntegrationTest {
     protected static final String AUTHORIZATION = "Authorization";
     protected static final String TOKEN_PREFIX = "Bearer ";
 
-    protected static final String ANSWER_URL = "/api/v1/answer";
+    protected static final String ANSWER_URL = "/api/v1/answers";
     protected static final String AUTH_URL = "/api/v1/auth";
     protected static final String TAG_URL = "/api/v1/tags";
     protected static final String USER_URL = "/api/v1/users";
@@ -60,6 +66,9 @@ public class AbstractIntegrationTest {
 
     @Autowired
     protected PasswordEncoder passwordEncoder;
+
+    @Autowired
+    protected AnswerRepository answerRepository;
 
     @Autowired
     protected QuestionRepository questionRepository;
@@ -150,5 +159,30 @@ public class AbstractIntegrationTest {
                 .build();
 
         return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(questionToSave));
+    }
+
+    protected Answer createAnswer(final UUID questionId, final AnswerRequest answerRequest, final TokenResponse token) throws Exception {
+        answerRequest.setQuestionId(questionId);
+        final MvcResult result = mockMvc.perform(post(ANSWER_URL)
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(answerRequest)))
+                        .andExpect(status().isCreated())
+                        .andReturn();
+
+        return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Answer.class);
+    }
+
+    protected Answer createDeletedAnswer(final AnswerRequest answerRequest, final User savedUser, final Question savedQuestion) {
+        final AnswerEntity answerToSave = AnswerEntity.builder()
+                .text(answerRequest.getText())
+                .rating(0)
+                .user(USER_MAPPER.toEntity(savedUser))
+                .question(QUESTION_MAPPER.toEntity(savedQuestion))
+                .createdAt(Instant.now())
+                .deletedAt(Instant.now())
+                .build();
+
+        return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(answerToSave));
     }
 }

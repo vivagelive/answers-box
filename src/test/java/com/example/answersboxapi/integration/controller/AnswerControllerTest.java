@@ -8,15 +8,22 @@ import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.user.User;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.List;
 import java.util.UUID;
 
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
 import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertAnswerFieldsEquals;
+import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertAnswersListFields;
+import static java.lang.String.format;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -125,5 +132,67 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void getAnswersByQuestionId_withUserAccess() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        final User savedUser = createUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+        createDeletedAnswer(generateAnswerRequest(), savedUser, savedQuestion);
+
+        //when
+        final MvcResult result = mockMvc.perform(get(format(ANSWER_URL + "/question/%s", savedQuestion.getId()))
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        final List<Answer> foundAnswers =
+                objectMapper.readValue(result.getResponse().getContentAsByteArray(), new TypeReference<>() {});
+
+        //then
+        assertAll(
+                () -> assertEquals(1, foundAnswers.size()),
+                () -> assertAnswersListFields(foundAnswers, savedAnswer)
+        );
+    }
+
+    @Test
+    public void getAnswersByQuestionId_withAdminAccess() throws Exception {
+        //given
+        final SignUpRequest signUpUserRequest = generateSignUpRequest();
+        final User savedUser = createUser(signUpUserRequest);
+        final TokenResponse usersToken = createSignIn(signUpUserRequest);
+
+        final Question savedQuestion = createQuestion(usersToken, generateQuestionRequest());
+
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), usersToken);
+        createDeletedAnswer(generateAnswerRequest(), savedUser, savedQuestion);
+
+        final SignUpRequest signUpAdminRequest = generateSignUpRequest();
+        createAdmin(signUpAdminRequest);
+        final TokenResponse adminsToken = createSignIn(signUpAdminRequest);
+
+        //when
+        final MvcResult result = mockMvc.perform(get(format(ANSWER_URL + "/question/%s", savedQuestion.getId()))
+                        .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        final List<Answer> foundAnswers =
+                objectMapper.readValue(result.getResponse().getContentAsByteArray(), new TypeReference<>() {});
+
+        //then
+        assertAll(
+                () -> assertEquals(2, foundAnswers.size()),
+                () -> assertAnswersListFields(foundAnswers, savedAnswer)
+        );
     }
 }
