@@ -44,7 +44,7 @@ public class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     public void signUp_whenEmailExist() throws Exception {
         //given
-        final User savedUser = createUser();
+        final User savedUser = insertUser();
 
         final SignUpRequest signUpRequest = generateSignUpRequest(savedUser.getEmail(), savedUser.getPassword());
 
@@ -61,7 +61,7 @@ public class AuthControllerTest extends AbstractIntegrationTest {
     public void signIn_happyPath() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         //when
         final TokenResponse token = createSignIn(signUpRequest);
@@ -73,7 +73,7 @@ public class AuthControllerTest extends AbstractIntegrationTest {
     @Test
     public void signIn_whenEmailInvalid() throws Exception {
         //given
-        final User savedUser = createUser();
+        final User savedUser = insertUser();
 
         final SignInRequest signInRequest = generateInvalidSignInRequest();
         signInRequest.setPassword(savedUser.getPassword());
@@ -106,7 +106,7 @@ public class AuthControllerTest extends AbstractIntegrationTest {
     public void logout_happyPath() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
         final TokenRequest tokenRequest = generateTokenRequest(token.getAccessToken());
@@ -127,7 +127,7 @@ public class AuthControllerTest extends AbstractIntegrationTest {
     public void logout_whenNotSignedIn() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
         final TokenRequest tokenRequest = generateTokenRequest(token.getAccessToken());

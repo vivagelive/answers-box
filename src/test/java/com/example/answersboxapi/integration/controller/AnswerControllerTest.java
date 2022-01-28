@@ -26,7 +26,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     public void create_happyPath() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        final User savedUser = createUser(signUpRequest);
+        final User savedUser = insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -53,7 +53,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     @Test
     public void create_whenNotSignedIn() throws Exception {
         //given
-        createUser(generateSignUpRequest());
+        insertUser(generateSignUpRequest());
 
         final AnswerRequest answerRequest = generateAnswerRequest();
 
@@ -70,7 +70,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     public void create_withAdminAccess() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createAdmin(signUpRequest);
+        insertAdmin(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -90,7 +90,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     public void create_withEmptyAnswer() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -110,7 +110,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     public void create_whenQuestionDoesntExist() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 

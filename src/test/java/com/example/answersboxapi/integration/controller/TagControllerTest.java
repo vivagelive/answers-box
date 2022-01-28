@@ -24,7 +24,7 @@ public class TagControllerTest extends AbstractIntegrationTest {
         final TagRequest tagRequest = generateTagRequest();
 
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createAdmin(signUpRequest);
+        insertAdmin(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -48,7 +48,7 @@ public class TagControllerTest extends AbstractIntegrationTest {
         final TagRequest tagRequest = generateTagRequest();
 
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -68,7 +68,7 @@ public class TagControllerTest extends AbstractIntegrationTest {
         final TagRequest tagRequest = generateTagRequest();
 
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         //when
         final ResultActions result = mockMvc.perform(post(TAG_URL)
@@ -85,7 +85,7 @@ public class TagControllerTest extends AbstractIntegrationTest {
         final TagRequest tagRequest = generateTagRequest();
 
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createAdmin(signUpRequest);
+        insertAdmin(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 

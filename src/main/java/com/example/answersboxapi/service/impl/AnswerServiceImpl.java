@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
@@ -52,6 +54,11 @@ public class AnswerServiceImpl implements AnswerService {
         } else {
             throw new AccessDeniedException("Admin can`t create an answer");
         }
+    }
+
+    @Override
+    public List<Answer> getByQuestionId(final UUID questionId) {
+        return ANSWER_MAPPER.toModelList(answerRepository.findByQuestionId(questionId, isAdmin()));
     }
 
     private void checkAnswerText(final AnswerRequest answerRequest) {

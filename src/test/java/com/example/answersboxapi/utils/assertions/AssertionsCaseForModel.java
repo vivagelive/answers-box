@@ -48,4 +48,14 @@ public class AssertionsCaseForModel {
                 () -> assertEquals(savedQuestion.getDescription(), foundQuestions.stream().findFirst().get().getDescription())
         );
     }
+
+    public static void assertAnswersListFields(final List<Answer> foundAnswers, final Answer savedAnswer) {
+        assertAll(
+                () -> assertEquals(savedAnswer.getId(), foundAnswers.stream().findFirst().get().getId()),
+                () -> assertEquals(savedAnswer.getText(), foundAnswers.stream().findFirst().get().getText()),
+                () -> assertEquals(savedAnswer.getRating(), foundAnswers.stream().findFirst().get().getRating()),
+                () -> assertEquals(savedAnswer.getUserId(), foundAnswers.stream().findFirst().get().getUserId()),
+                () -> assertEquals(savedAnswer.getQuestionId(), foundAnswers.stream().findFirst().get().getQuestionId())
+        );
+    }
 }
