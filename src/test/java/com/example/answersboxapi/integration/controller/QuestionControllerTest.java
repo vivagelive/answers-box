@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -415,5 +416,71 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void getAllFilteredByTagId_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpUserRequest = generateSignUpRequest();
+        final User savedUser = insertUser(signUpUserRequest);
+        final TokenResponse usersToken = createSignIn(signUpUserRequest);
+
+        final Tag mainTag = saveTag();
+        final Tag secondaryTag = saveTag();
+
+        final QuestionRequest questionRequest = generateQuestionRequest();
+        questionRequest.setTagId(mainTag.getId());
+
+        final QuestionRequest secondaryRequest = generateQuestionRequest();
+        secondaryRequest.setTagId(secondaryTag.getId());
+
+        final Question savedQuestion = createQuestion(usersToken, questionRequest);
+        createQuestion(usersToken, secondaryRequest);
+
+        insertQuestionDetails(savedQuestion, mainTag);
+
+        //when
+        final MvcResult result = mockMvc.perform(get(QUESTION_URL + "/filter/tag")
+                        .header(AUTHORIZATION, TOKEN_PREFIX + usersToken.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(List.of(mainTag.getId()))))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        final List<Question> filteredQuestions =
+                objectMapper.readValue(result.getResponse().getContentAsByteArray(), new TypeReference<>() {});
+
+        //then
+        assertAll(
+                () -> assertEquals(1, filteredQuestions.size()),
+                () -> assertQuestionsListFields(filteredQuestions, savedUser, savedQuestion)
+        );
+    }
+
+    @Test
+    public void getAllFilteredByTagId_whenTagNotExist() throws Exception {
+        //given
+        final SignUpRequest signUpUserRequest = generateSignUpRequest();
+        insertUser(signUpUserRequest);
+        final TokenResponse usersToken = createSignIn(signUpUserRequest);
+
+        final Tag savedTag = saveTag();
+
+        final QuestionRequest questionRequest = generateQuestionRequest();
+        questionRequest.setTagId(savedTag.getId());
+
+        final Question savedQuestion = createQuestion(usersToken, questionRequest);
+        insertQuestionDetails(savedQuestion, savedTag);
+
+        final List<Object> emptyList = Collections.emptyList();
+
+        //when
+        final ResultActions result = mockMvc.perform(get(QUESTION_URL +  "/filter/tag")
+                .header(AUTHORIZATION, TOKEN_PREFIX + usersToken.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(emptyList)));
+
+        //then
+        result.andExpect(status().isNotFound());
     }
 }

@@ -67,8 +67,6 @@ public class QuestionServiceImpl implements QuestionService {
 
             final QuestionEntity savedQuestion = questionRepository.saveAndFlush(questionEntity);
 
-            questionDetailsService.saveQuestionDetails(savedQuestion, questionRequest.getTagId());
-
             return QUESTION_MAPPER.toModel(savedQuestion);
 
         } else {
@@ -90,6 +88,22 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public List<Answer> getAnswersByQuestionId(final UUID questionId) {
         return answerService.getByQuestionId(questionId);
+    }
+
+    @Override
+    public Page<Question> getAllFilteredByTagId(final int page, final int size, final List<UUID> tagId) {
+        if (!tagId.isEmpty()) {
+            final Page<Question> foundQuestions = getAll(page, size);
+
+            final List<Question> filteredQuestions = foundQuestions.getContent().stream()
+                    .filter(question -> question.getTagsIds().stream()
+                            .anyMatch(tagId::contains))
+                    .collect(Collectors.toList());
+
+            return new PageImpl<>(filteredQuestions, toPageRequest(page, size), filteredQuestions.size());
+        } else {
+            throw new EntityNotFoundException("List of tags is empty");
+        }
     }
 
     @Override

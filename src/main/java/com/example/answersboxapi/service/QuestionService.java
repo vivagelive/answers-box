@@ -18,6 +18,8 @@ public interface QuestionService {
 
     List<Answer> getAnswersByQuestionId(final UUID questionId);
 
+    Page<Question> getAllFilteredByTagId(final int page, final int size, final List<UUID> tagId);
+
     Question addTagToQuestion(final UUID questionId, final UUID tagId);
 
     Question removeTagFromQuestion(final UUID questionId, final UUID tagId);
