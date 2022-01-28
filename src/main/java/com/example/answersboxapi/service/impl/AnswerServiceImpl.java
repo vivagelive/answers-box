@@ -12,6 +12,8 @@ import com.example.answersboxapi.service.AnswerService;
 import com.example.answersboxapi.service.QuestionService;
 import com.example.answersboxapi.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -25,6 +27,7 @@ import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 
 @Service
 @RequiredArgsConstructor
+@Scope(value = "singleton", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class AnswerServiceImpl implements AnswerService {
 
     private final AnswerRepository answerRepository;
@@ -57,8 +60,8 @@ public class AnswerServiceImpl implements AnswerService {
     }
 
     @Override
-    public List<Answer> getAnswersByQuestionId(final UUID questionId) {
-        return ANSWER_MAPPER.toModelList(answerRepository.findAnswersByQuestionId(questionId, isAdmin()));
+    public List<Answer> getByQuestionId(final UUID questionId) {
+        return ANSWER_MAPPER.toModelList(answerRepository.findByQuestionId(questionId, isAdmin()));
     }
 
     private void checkAnswerText(final AnswerRequest answerRequest) {

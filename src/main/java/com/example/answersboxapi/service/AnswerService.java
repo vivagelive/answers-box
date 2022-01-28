@@ -10,5 +10,5 @@ public interface AnswerService {
 
     Answer create(final AnswerRequest answerRequest);
 
-    List<Answer> getAnswersByQuestionId(final UUID questionId);
+    List<Answer> getByQuestionId(final UUID questionId);
 }

@@ -84,7 +84,7 @@ public class AbstractIntegrationTest {
         userRepository.deleteAll();
     }
 
-    protected User createUser() {
+    protected User insertUser() {
         return USER_MAPPER.toModel(userRepository.saveAndFlush(generateUser()));
     }
 
@@ -100,13 +100,13 @@ public class AbstractIntegrationTest {
         return objectMapper.readValue(result.getResponse().getContentAsByteArray(),TokenResponse.class);
     }
 
-    protected User createUser(final SignUpRequest signUpRequest) {
+    protected User insertUser(final SignUpRequest signUpRequest) {
         final UserEntity userToSave = createEntity(signUpRequest);
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
 
-    protected User createAdmin(final SignUpRequest signUpRequest) {
+    protected User insertAdmin(final SignUpRequest signUpRequest) {
         final UserEntity userToSave = createEntity(signUpRequest);
         userToSave.setRole(UserEntityRole.ROLE_ADMIN);
 
@@ -148,7 +148,7 @@ public class AbstractIntegrationTest {
         return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Question.class);
     }
 
-    protected Question createDeletedQuestion(final QuestionRequest questionRequest, final User savedUser) {
+    protected Question insertDeletedQuestion(final QuestionRequest questionRequest, final User savedUser) {
         final QuestionEntity questionToSave = QuestionEntity.builder()
                 .rating(0)
                 .createdAt(Instant.now())
@@ -173,7 +173,7 @@ public class AbstractIntegrationTest {
         return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Answer.class);
     }
 
-    protected Answer createDeletedAnswer(final AnswerRequest answerRequest, final User savedUser, final Question savedQuestion) {
+    protected Answer insertDeletedAnswer(final AnswerRequest answerRequest, final User savedUser, final Question savedQuestion) {
         final AnswerEntity answerToSave = AnswerEntity.builder()
                 .text(answerRequest.getText())
                 .rating(0)

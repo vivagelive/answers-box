@@ -13,5 +13,5 @@ import java.util.UUID;
 public interface AnswerRepository extends JpaRepository<AnswerEntity, UUID> {
 
     @Query(value = "SELECT * FROM answer WHERE question_id = :questionId AND (:isAdmin = true OR deleted_at IS NULL);", nativeQuery = true)
-    List<AnswerEntity> findAnswersByQuestionId(@Param("questionId") final UUID questionId, @Param("isAdmin") final boolean isAdmin);
+    List<AnswerEntity> findByQuestionId(@Param("questionId") final UUID questionId, @Param("isAdmin") final boolean isAdmin);
 }

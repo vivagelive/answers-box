@@ -19,7 +19,7 @@ public class UserControllerTest extends AbstractIntegrationTest {
     public void deleteById_happyPath() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        final User savedUser = createUser(signUpRequest);
+        final User savedUser = insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -35,7 +35,7 @@ public class UserControllerTest extends AbstractIntegrationTest {
     public void deleteByID_whenWrongId() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -50,10 +50,10 @@ public class UserControllerTest extends AbstractIntegrationTest {
     @Test
     public void deleteById_whenForbidden() throws Exception {
         //given
-        final User savedUser = createUser(generateSignUpRequest());
+        final User savedUser = insertUser(generateSignUpRequest());
 
         final SignUpRequest activeUser = generateSignUpRequest();
-        createUser(activeUser);
+        insertUser(activeUser);
         final TokenResponse token = createSignIn(activeUser);
 
         //when
@@ -67,10 +67,10 @@ public class UserControllerTest extends AbstractIntegrationTest {
     @Test
     public void deleteById_withAdminAccess() throws Exception {
         //given
-        final User savedUser = createUser(generateSignUpRequest());
+        final User savedUser = insertUser(generateSignUpRequest());
 
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createAdmin(signUpRequest);
+        insertAdmin(signUpRequest);
 
         final TokenResponse adminsToken = createSignIn(signUpRequest);
 

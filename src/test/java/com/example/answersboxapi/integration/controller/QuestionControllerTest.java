@@ -1,6 +1,7 @@
 package com.example.answersboxapi.integration.controller;
 
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
+import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
@@ -15,7 +16,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import java.util.List;
 
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
+import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertAnswersListFields;
 import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertQuestionsListFields;
+import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -28,7 +31,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
     public void create_happyPath() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -55,7 +58,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
     public void create_withAdminAccess() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createAdmin(signUpRequest);
+        insertAdmin(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -75,7 +78,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
     public void create_withEmptyFields() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        createUser(signUpRequest);
+        insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
@@ -95,12 +98,12 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
     public void getAll_withUserAccess() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        final User savedUser = createUser(signUpRequest);
+        final User savedUser = insertUser(signUpRequest);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
         final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        createDeletedQuestion(generateQuestionRequest(), savedUser);
+        insertDeletedQuestion(generateQuestionRequest(), savedUser);
 
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
@@ -122,16 +125,16 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
     public void getAll_withAdminAccess() throws Exception {
         //given
         final SignUpRequest signUpUserRequest = generateSignUpRequest();
-        final User savedUser = createUser(signUpUserRequest);
+        final User savedUser = insertUser(signUpUserRequest);
         final TokenResponse usersToken = createSignIn(signUpUserRequest);
 
 
         final SignUpRequest signUpAdminRequest = generateSignUpRequest();
-        createAdmin(signUpAdminRequest);
+        insertAdmin(signUpAdminRequest);
         final TokenResponse adminsToken = createSignIn(signUpAdminRequest);
 
         final Question savedQuestion = createQuestion(usersToken, generateQuestionRequest());
-        createDeletedQuestion(generateQuestionRequest(), savedUser);
+        insertDeletedQuestion(generateQuestionRequest(), savedUser);
 
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
@@ -146,6 +149,68 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         assertAll(
                 () -> assertEquals(2, foundQuestions.size()),
                 () -> assertQuestionsListFields(foundQuestions, savedUser, savedQuestion)
+        );
+    }
+
+    @Test
+    public void getAnswersByQuestionId_withUserAccess() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        final User savedUser = insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+        insertDeletedAnswer(generateAnswerRequest(), savedUser, savedQuestion);
+
+        //when
+        final MvcResult result = mockMvc.perform(get(format(QUESTION_URL + "/%s/answers", savedQuestion.getId()))
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        final List<Answer> foundAnswers =
+                objectMapper.readValue(result.getResponse().getContentAsByteArray(), new TypeReference<>() {});
+
+        //then
+        assertAll(
+                () -> assertEquals(1, foundAnswers.size()),
+                () -> assertAnswersListFields(foundAnswers, savedAnswer)
+        );
+    }
+
+    @Test
+    public void getAnswersByQuestionId_withAdminAccess() throws Exception {
+        //given
+        final SignUpRequest signUpUserRequest = generateSignUpRequest();
+        final User savedUser = insertUser(signUpUserRequest);
+        final TokenResponse usersToken = createSignIn(signUpUserRequest);
+
+        final Question savedQuestion = createQuestion(usersToken, generateQuestionRequest());
+
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), usersToken);
+        insertDeletedAnswer(generateAnswerRequest(), savedUser, savedQuestion);
+
+        final SignUpRequest signUpAdminRequest = generateSignUpRequest();
+        insertAdmin(signUpAdminRequest);
+        final TokenResponse adminsToken = createSignIn(signUpAdminRequest);
+
+        //when
+        final MvcResult result = mockMvc.perform(get(format(QUESTION_URL + "/%s/answers", savedQuestion.getId()))
+                        .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        final List<Answer> foundAnswers =
+                objectMapper.readValue(result.getResponse().getContentAsByteArray(), new TypeReference<>() {});
+
+        //then
+        assertAll(
+                () -> assertEquals(2, foundAnswers.size()),
+                () -> assertAnswersListFields(foundAnswers, savedAnswer)
         );
     }
 }

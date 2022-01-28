@@ -4,10 +4,12 @@ import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.InvalidInputDataException;
+import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.repository.QuestionRepository;
+import com.example.answersboxapi.service.AnswerService;
 import com.example.answersboxapi.service.QuestionService;
 import com.example.answersboxapi.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
@@ -29,6 +32,8 @@ public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepository;
 
     private final UserService userService;
+
+    private final AnswerService answerService;
 
     @Override
     public Question create(final QuestionRequest questionRequest) {
@@ -61,6 +66,11 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public Page<Question> getAll(final int page, final int size) {
         return questionRepository.findAll(toPageRequest(page, size), isAdmin()).map(QUESTION_MAPPER::toModel);
+    }
+
+    @Override
+    public List<Answer> getByQuestionId(final UUID questionId) {
+        return answerService.getByQuestionId(questionId);
     }
 
     private void checkQuestionFields(final QuestionRequest questionRequest) {

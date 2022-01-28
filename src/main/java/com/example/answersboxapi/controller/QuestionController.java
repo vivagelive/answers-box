@@ -1,6 +1,7 @@
 package com.example.answersboxapi.controller;
 
 import com.example.answersboxapi.config.SwaggerConfig;
+import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.service.QuestionService;
@@ -14,6 +15,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.answersboxapi.utils.pagination.HeaderUtils.generateHeaders;
 
@@ -37,5 +39,11 @@ public class QuestionController {
         final MultiValueMap<String, String> headers = generateHeaders(foundQuestions);
 
         return new ResponseEntity<>(foundQuestions.getContent(), headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/answers")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "get answers by id")
+    public ResponseEntity<List<Answer>> getByQuestionId(@PathVariable final UUID id) {
+        return new ResponseEntity<>(questionService.getByQuestionId(id), HttpStatus.OK);
     }
 }
