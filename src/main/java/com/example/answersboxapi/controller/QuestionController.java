@@ -44,6 +44,6 @@ public class QuestionController {
     @GetMapping("/{id}/answers")
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "get answers by id")
     public ResponseEntity<List<Answer>> getByQuestionId(@PathVariable final UUID id) {
-        return new ResponseEntity<>(questionService.getByQuestionId(id), HttpStatus.OK);
+        return new ResponseEntity<>(questionService.getAnswersByQuestionId(id), HttpStatus.OK);
     }
 }

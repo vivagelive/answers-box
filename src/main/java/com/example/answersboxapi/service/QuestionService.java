@@ -16,5 +16,5 @@ public interface QuestionService {
 
     Page<Question> getAll(final int page, final int size);
 
-    List<Answer> getByQuestionId(final UUID questionId);
+    List<Answer> getAnswersByQuestionId(final UUID questionId);
 }

@@ -12,7 +12,7 @@ import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.service.AnswerService;
 import com.example.answersboxapi.service.QuestionService;
 import com.example.answersboxapi.service.UserService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +26,6 @@ import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 import static com.example.answersboxapi.utils.pagination.PagingUtils.toPageRequest;
 
 @Service
-@RequiredArgsConstructor
 public class QuestionServiceImpl implements QuestionService {
 
     private final QuestionRepository questionRepository;
@@ -34,6 +33,14 @@ public class QuestionServiceImpl implements QuestionService {
     private final UserService userService;
 
     private final AnswerService answerService;
+
+    public QuestionServiceImpl(final QuestionRepository questionRepository,
+                               final UserService userService,
+                               @Lazy final AnswerService answerService) {
+        this.questionRepository = questionRepository;
+        this.userService = userService;
+        this.answerService = answerService;
+    }
 
     @Override
     public Question create(final QuestionRequest questionRequest) {
@@ -69,7 +76,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public List<Answer> getByQuestionId(final UUID questionId) {
+    public List<Answer> getAnswersByQuestionId(final UUID questionId) {
         return answerService.getByQuestionId(questionId);
     }
 
