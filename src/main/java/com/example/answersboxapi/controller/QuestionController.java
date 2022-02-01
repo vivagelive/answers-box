@@ -46,4 +46,15 @@ public class QuestionController {
     public ResponseEntity<List<Answer>> getByQuestionId(@PathVariable final UUID id) {
         return new ResponseEntity<>(questionService.getAnswersByQuestionId(id), HttpStatus.OK);
     }
+
+    @GetMapping("/filter/{tagId}/tag")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "filter all questions by tag id")
+    public ResponseEntity<List<Question>> getAllFilteredByTagId(@RequestParam(defaultValue = "1") final int page,
+                                                                @RequestParam(defaultValue = "10") final int size,
+                                                                @PathVariable final UUID tagId) {
+        final Page<Question> filteredQuestions = questionService.getAllFilteredByTagId(page, size, tagId);
+        final MultiValueMap<String, String> headers = generateHeaders(filteredQuestions);
+
+        return new ResponseEntity<>(filteredQuestions.getContent(), headers, HttpStatus.OK);
+    }
 }

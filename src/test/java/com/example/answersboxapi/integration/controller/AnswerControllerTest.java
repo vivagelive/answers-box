@@ -7,6 +7,7 @@ import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.user.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -30,7 +31,10 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
 
         final TokenResponse token = createSignIn(signUpRequest);
 
+        final Tag savedTag = saveTag();
+
         final QuestionRequest questionRequest = generateQuestionRequest();
+        questionRequest.setTagId(savedTag.getId());
         Question savedQuestion = createQuestion(token, questionRequest);
 
         final AnswerRequest answerRequest = generateAnswerRequest();
