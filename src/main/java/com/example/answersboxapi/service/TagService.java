@@ -9,5 +9,7 @@ public interface TagService {
 
     Tag create(final TagRequest tagRequest);
 
-    Tag getById(final UUID tagId);
+    Tag getById(final UUID id);
+
+    boolean existsById(final UUID id);
 }

@@ -6,6 +6,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface QuestionDetailsMapper {
 
@@ -14,4 +16,10 @@ public interface QuestionDetailsMapper {
     @Mapping(source = "questionId", target = "questionId.id")
     @Mapping(source = "tagId", target = "tagId.id")
     QuestionDetailsEntity toEntity(final QuestionDetails questionDetails);
+
+    @Mapping(source = "questionId.id", target = "questionId")
+    @Mapping(source = "tagId.id", target = "tagId")
+    QuestionDetails toModel(final QuestionDetailsEntity questionDetails);
+
+    List<QuestionDetails> toModelList(final List<QuestionDetailsEntity> questionDetailsEntities);
 }

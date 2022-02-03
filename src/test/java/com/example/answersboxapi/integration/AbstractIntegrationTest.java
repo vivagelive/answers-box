@@ -1,8 +1,6 @@
 package com.example.answersboxapi.integration;
 
-import com.example.answersboxapi.entity.AnswerEntity;
-import com.example.answersboxapi.entity.QuestionEntity;
-import com.example.answersboxapi.entity.UserEntity;
+import com.example.answersboxapi.entity.*;
 import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
@@ -10,6 +8,7 @@ import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
+import com.example.answersboxapi.model.question.QuestionDetails;
 import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
@@ -33,10 +32,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
+import static com.example.answersboxapi.mapper.QuestionDetailsMapper.QUESTION_DETAILS_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
+import static com.example.answersboxapi.mapper.TagMapper.TAG_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
-import static com.example.answersboxapi.utils.GeneratorUtil.generateTagRequest;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -69,6 +69,9 @@ public class AbstractIntegrationTest {
 
     @Autowired
     protected QuestionRepository questionRepository;
+
+    @Autowired
+    protected QuestionDetailsRepository questionDetailsRepository;
 
     @Autowired
     protected UserRepository userRepository;
@@ -126,14 +129,14 @@ public class AbstractIntegrationTest {
     }
 
     protected Tag createTag(final TokenResponse token, final TagRequest tagRequest) throws Exception {
-        final MvcResult result = mockMvc.perform(post(TAG_URL)
+         final MvcResult result = mockMvc.perform(post(TAG_URL)
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(tagRequest)))
                         .andExpect(status().isCreated())
                         .andReturn();
 
-        return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Tag.class);
+         return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Tag.class);
     }
 
     protected Question createQuestion(final TokenResponse token, final QuestionRequest questionRequest) throws Exception {
@@ -191,5 +194,14 @@ public class AbstractIntegrationTest {
         final TokenResponse adminsToken = createSignIn(signUpAdminRequest);
 
         return createTag(adminsToken, generateTagRequest());
+    }
+
+    protected QuestionDetails insertQuestionDetails(final Question question, final Tag tag) {
+        final QuestionDetailsEntity questionDetails = QuestionDetailsEntity.builder()
+                .questionId(QUESTION_MAPPER.toEntity(question))
+                .tagId(TAG_MAPPER.toEntity(tag))
+                .build();
+
+        return QUESTION_DETAILS_MAPPER.toModel(questionDetailsRepository.saveAndFlush(questionDetails));
     }
 }

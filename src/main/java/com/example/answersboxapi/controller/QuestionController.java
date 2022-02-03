@@ -47,14 +47,16 @@ public class QuestionController {
         return new ResponseEntity<>(questionService.getAnswersByQuestionId(id), HttpStatus.OK);
     }
 
-    @GetMapping("/filter/{tagId}/tag")
-    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "filter all questions by tag id")
-    public ResponseEntity<List<Question>> getAllFilteredByTagId(@RequestParam(defaultValue = "1") final int page,
-                                                                @RequestParam(defaultValue = "10") final int size,
-                                                                @PathVariable final UUID tagId) {
-        final Page<Question> filteredQuestions = questionService.getAllFilteredByTagId(page, size, tagId);
-        final MultiValueMap<String, String> headers = generateHeaders(filteredQuestions);
-
-        return new ResponseEntity<>(filteredQuestions.getContent(), headers, HttpStatus.OK);
+    @PutMapping ("/{questionId}/add-tag/{tagId}")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "add tag by question id")
+    public ResponseEntity<Question> addTagToQuestion(@PathVariable final UUID questionId, @PathVariable final UUID tagId) {
+        return new ResponseEntity<>(questionService.addTagToQuestion(questionId, tagId), HttpStatus.OK);
     }
+
+    @PutMapping("/{questionId}/remove-tag/{tagId}")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "remove tag by question id")
+    public ResponseEntity<Question> removeTagFromQuestion(@PathVariable final UUID questionId, @PathVariable final UUID tagId) {
+        return new ResponseEntity<>(questionService.removeTagFromQuestion(questionId, tagId), HttpStatus.OK);
+    }
+
 }
