@@ -87,6 +87,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @Transactional
     public Question addTagToQuestion(final UUID questionId, final UUID tagId) {
         final Question foundQuestion = getById(questionId);
 
