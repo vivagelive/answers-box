@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -17,7 +17,7 @@ public interface QuestionDetailsRepository extends JpaRepository<QuestionDetails
     QuestionDetailsEntity create(@Param("questionId") final UUID questionId, @Param("tagId") final UUID tagId);
 
     @Query(value = "SELECT * FROM question_details WHERE question_id = :questionId", nativeQuery = true)
-    Optional<QuestionDetailsEntity> findByQuestionId(@Param("questionId") final UUID questionID);
+    List<QuestionDetailsEntity> findByQuestionId(@Param("questionId") final UUID questionID);
 
     @Modifying
     @Query(value = "DELETE FROM question_details WHERE id = :id", nativeQuery = true)

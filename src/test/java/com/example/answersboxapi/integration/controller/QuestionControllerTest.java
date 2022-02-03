@@ -226,7 +226,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final Tag savedTag = saveTag();
 
         //when
-        final MvcResult result = mockMvc.perform(get(QUESTION_URL + "/{questionId}/addTag/{tagId}", savedQuestion.getId(), savedTag.getId())
+        final MvcResult result = mockMvc.perform(get(QUESTION_URL + "/{questionId}/add-tag/{tagId}", savedQuestion.getId(), savedTag.getId())
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
@@ -297,7 +297,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         //when
         final MvcResult result
-                = mockMvc.perform(get(QUESTION_URL + "/{questionId}/removeTag/{tagId}", savedQuestion.getId(), savedTag.getId())
+                = mockMvc.perform(get(QUESTION_URL + "/{questionId}/remove-tag/{tagId}", savedQuestion.getId(), savedTag.getId())
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())

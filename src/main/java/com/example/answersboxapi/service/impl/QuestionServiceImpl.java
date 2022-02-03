@@ -104,13 +104,15 @@ public class QuestionServiceImpl implements QuestionService {
     public Question removeTagFromQuestion(final UUID questionId, final UUID tagId) {
         final Question foundQuestion = getById(questionId);
 
-        final QuestionDetails foundDetails = questionsDetailsService.getById(questionId);
+        final List<QuestionDetails> foundDetails = questionsDetailsService.getAllByQuestionId(questionId);
 
-        if (foundDetails.getQuestionId().equals(questionId) && foundDetails.getTagId().equals(tagId)){
-            foundQuestion.getTagsIds().remove(tagId);
+        foundDetails.forEach(questionDetails -> {
+            if (questionDetails.getTagId().equals(tagId)) {
+                foundQuestion.getTagsIds().remove(tagId);
 
-            questionsDetailsService.delete(foundDetails.getId());
-        }
+                questionsDetailsService.deleteById(questionDetails.getId());
+            }
+        });
         return foundQuestion;
     }
 

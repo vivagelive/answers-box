@@ -1,7 +1,6 @@
 package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.entity.QuestionDetailsEntity;
-import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionDetails;
 import com.example.answersboxapi.model.tag.Tag;
@@ -11,12 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 import static com.example.answersboxapi.mapper.QuestionDetailsMapper.QUESTION_DETAILS_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.TagMapper.TAG_MAPPER;
-import static java.lang.String.format;
 
 @Service
 @RequiredArgsConstructor
@@ -35,15 +34,14 @@ public class QuestionDetailsServiceImpl implements QuestionDetailsService {
     }
 
     @Override
-    public QuestionDetails getById(final UUID questionId) {
-        return QUESTION_DETAILS_MAPPER.toModel(
-                questionDetailsRepository.findByQuestionId(questionId)
-                        .orElseThrow(() -> new EntityNotFoundException(format("Question details with id: %s not found", questionId))));
+    public List<QuestionDetails> getAllByQuestionId(final UUID id) {
+        return QUESTION_DETAILS_MAPPER.toModelList(
+                questionDetailsRepository.findByQuestionId(id));
     }
 
     @Override
     @Transactional
-    public void delete(final UUID questionDetailsId) {
-        questionDetailsRepository.deleteById(questionDetailsId);
+    public void deleteById(final UUID id) {
+        questionDetailsRepository.deleteById(id);
     }
 }

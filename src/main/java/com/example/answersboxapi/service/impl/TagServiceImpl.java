@@ -38,9 +38,9 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public Tag getById(final UUID tagId) {
-        return TAG_MAPPER.toModel(tagRepository.findById(tagId)
-                .orElseThrow(() -> new EntityNotFoundException(String.format("Tag with id:%s not found", tagId))));
+    public Tag getById(final UUID id) {
+        return TAG_MAPPER.toModel(tagRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Tag with id:%s not found", id))));
     }
 
     private boolean existsByName(final String name) {
