@@ -14,4 +14,8 @@ public interface QuestionDetailsMapper {
     @Mapping(source = "questionId", target = "questionId.id")
     @Mapping(source = "tagId", target = "tagId.id")
     QuestionDetailsEntity toEntity(final QuestionDetails questionDetails);
+
+    @Mapping(source = "questionId.id", target = "questionId")
+    @Mapping(source = "tagId.id", target = "tagId")
+    QuestionDetails toModel(final QuestionDetailsEntity questionDetails);
 }
