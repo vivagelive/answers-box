@@ -46,4 +46,17 @@ public class QuestionController {
     public ResponseEntity<List<Answer>> getByQuestionId(@PathVariable final UUID id) {
         return new ResponseEntity<>(questionService.getAnswersByQuestionId(id), HttpStatus.OK);
     }
+
+    @PutMapping ("/{questionId}/add-tag/{tagId}")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "add tag by question id")
+    public ResponseEntity<Question> addTagToQuestion(@PathVariable final UUID questionId, @PathVariable final UUID tagId) {
+        return new ResponseEntity<>(questionService.addTagToQuestion(questionId, tagId), HttpStatus.OK);
+    }
+
+    @PutMapping("/{questionId}/remove-tag/{tagId}")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "remove tag by question id")
+    public ResponseEntity<Question> removeTagFromQuestion(@PathVariable final UUID questionId, @PathVariable final UUID tagId) {
+        return new ResponseEntity<>(questionService.removeTagFromQuestion(questionId, tagId), HttpStatus.OK);
+    }
+
 }

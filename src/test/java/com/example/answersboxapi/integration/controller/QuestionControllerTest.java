@@ -6,6 +6,7 @@ import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.user.User;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.Test;
@@ -14,15 +15,13 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
-import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertAnswersListFields;
-import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertQuestionsListFields;
+import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.*;
 import static java.lang.String.format;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class QuestionControllerTest extends AbstractIntegrationTest {
@@ -212,5 +211,187 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
                 () -> assertEquals(2, foundAnswers.size()),
                 () -> assertAnswersListFields(foundAnswers, savedAnswer)
         );
+    }
+
+    @Test
+    public void addTagToQuestion_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        final User savedUser = insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final Tag savedTag = saveTag();
+
+        //when
+        final MvcResult result = mockMvc.perform(put(QUESTION_URL + "/{questionId}/add-tag/{tagId}", savedQuestion.getId(), savedTag.getId())
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        final Question foundQuestion = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Question.class);
+
+        //then
+        assertAll(
+                () -> assertEquals(1, foundQuestion.getTagsIds().size()),
+                () -> assertQuestionFields(foundQuestion, savedUser, savedTag)
+        );
+    }
+
+    @Test
+    public void addTagToQuestion_whenTagNotFound() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final UUID notExistingId = UUID.randomUUID();
+
+        //when
+        final ResultActions result =
+                mockMvc.perform(put(QUESTION_URL + "/{questionId}/add-tag/{tagId}", savedQuestion.getId(), notExistingId)
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void addTagToQuestion_whenQuestionNotFound() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Tag savedTag = saveTag();
+
+        final UUID notExistingId = UUID.randomUUID();
+
+        //when
+        final ResultActions result =
+                mockMvc.perform(put(QUESTION_URL + "/{questionId}/add-tag/{tagId}", notExistingId, savedTag.getId())
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void addTagToQuestion_whenNotSignedIn() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final Tag savedTag = saveTag();
+
+        //when
+        final ResultActions result =
+                mockMvc.perform(put(QUESTION_URL + "/{questionId}/add-tag/{tagId}", savedQuestion.getId(), savedTag.getId())
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void removeTagFromQuestion_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final Tag savedTag = saveTag();
+
+        insertQuestionDetails(savedQuestion, savedTag);
+
+        //when
+        final MvcResult result
+                = mockMvc.perform(put(QUESTION_URL + "/{questionId}/remove-tag/{tagId}", savedQuestion.getId(), savedTag.getId())
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        final Question foundQuestion = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Question.class);
+
+        //then
+        assertAll(
+                () -> assertNotNull(foundQuestion),
+                () -> assertTrue(foundQuestion.getTagsIds().isEmpty()),
+                () -> assertTrue(questionDetailsRepository.findAllByQuestionId(savedQuestion.getId()).isEmpty())
+        );
+    }
+
+    @Test
+    public void removeTagFromQuestion_whenQuestionNotFound() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Tag savedTag = saveTag();
+
+        final UUID notExistingId = UUID.randomUUID();
+
+        //when
+        final ResultActions result
+                = mockMvc.perform(put(QUESTION_URL + "/{questionId}/remove-tag/{tagId}", notExistingId, savedTag.getId())
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void removeTagFromQuestion_whenTagNotFound() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final UUID notExistingId = UUID.randomUUID();
+
+        //when
+        final ResultActions result
+                = mockMvc.perform(put(QUESTION_URL + "/{questionId}/remove-tag/{tagId}", savedQuestion.getId(), notExistingId)
+                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void removeTagFromQuestion_whenNotSignedIn() throws Exception {
+        //given
+        SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final Tag savedTag = saveTag();
+
+        //when
+        final ResultActions result =
+                mockMvc.perform(put(QUESTION_URL + "/{questionId}/remove-tag/{tagId}", savedQuestion.getId(), savedTag.getId())
+                        .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isUnauthorized());
     }
 }

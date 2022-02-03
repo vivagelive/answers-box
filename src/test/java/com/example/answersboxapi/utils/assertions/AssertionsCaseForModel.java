@@ -3,6 +3,7 @@ package com.example.answersboxapi.utils.assertions;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.question.Question;
+import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.user.User;
 
 import java.util.List;
@@ -56,6 +57,15 @@ public class AssertionsCaseForModel {
                 () -> assertEquals(savedAnswer.getRating(), foundAnswers.stream().findFirst().get().getRating()),
                 () -> assertEquals(savedAnswer.getUserId(), foundAnswers.stream().findFirst().get().getUserId()),
                 () -> assertEquals(savedAnswer.getQuestionId(), foundAnswers.stream().findFirst().get().getQuestionId())
+        );
+    }
+
+    public static void assertQuestionFields(final Question foundQuestion, final User savedUser, final Tag savedTag){
+        assertAll(
+                () -> assertNotNull(foundQuestion.getTagsIds()),
+                () -> assertEquals(1, foundQuestion.getTagsIds().size()),
+                () -> assertEquals(savedUser.getId(), foundQuestion.getUserId()),
+                () -> assertEquals(savedTag.getId(), foundQuestion.getTagsIds().stream().findFirst().get())
         );
     }
 }

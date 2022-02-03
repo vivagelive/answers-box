@@ -6,15 +6,16 @@ import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.InvalidInputDataException;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
+import com.example.answersboxapi.model.question.QuestionDetails;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.repository.QuestionRepository;
-import com.example.answersboxapi.service.AnswerService;
-import com.example.answersboxapi.service.QuestionService;
-import com.example.answersboxapi.service.UserService;
+import com.example.answersboxapi.service.*;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -30,16 +31,21 @@ public class QuestionServiceImpl implements QuestionService {
 
     private final QuestionRepository questionRepository;
 
-    private final UserService userService;
-
     private final AnswerService answerService;
+    private final TagService tagService;
+    private final QuestionDetailsService questionsDetailsService;
+    private final UserService userService;
 
     public QuestionServiceImpl(final QuestionRepository questionRepository,
                                final UserService userService,
+                               final TagService tagService,
+                               final QuestionDetailsService questionDetailsService,
                                @Lazy final AnswerService answerService) {
         this.questionRepository = questionRepository;
         this.userService = userService;
         this.answerService = answerService;
+        this.tagService = tagService;
+        this.questionsDetailsService = questionDetailsService;
     }
 
     @Override
@@ -80,9 +86,45 @@ public class QuestionServiceImpl implements QuestionService {
         return answerService.getByQuestionId(questionId);
     }
 
+    @Override
+    @Transactional
+    public Question addTagToQuestion(final UUID questionId, final UUID tagId) {
+        final Question foundQuestion = getById(questionId);
+
+        final Tag foundTag = tagService.getById(tagId);
+
+        foundQuestion.getTagsIds().add(foundTag.getId());
+
+        questionsDetailsService.create(foundQuestion, foundTag);
+        return foundQuestion;
+    }
+
+    @Override
+    @Transactional
+    public Question removeTagFromQuestion(final UUID questionId, final UUID tagId) {
+        final Question foundQuestion = getById(questionId);
+
+        final List<QuestionDetails> foundDetails = questionsDetailsService.getAllByQuestionId(questionId);
+
+        if (tagExistsById(tagId)) {
+            foundDetails.forEach(questionDetails -> {
+                if (questionDetails.getTagId().equals(tagId)) {
+                    foundQuestion.getTagsIds().remove(tagId);
+
+                    questionsDetailsService.deleteById(questionDetails.getId());
+                }
+            });
+        }
+        return foundQuestion;
+    }
+
     private void checkQuestionFields(final QuestionRequest questionRequest) {
         if (questionRequest.getTitle().isEmpty() || questionRequest.getDescription().isEmpty()) {
             throw new InvalidInputDataException("Empty title or description");
         }
+    }
+
+    private boolean tagExistsById(final UUID id) {
+        return tagService.existsById(id);
     }
 }
