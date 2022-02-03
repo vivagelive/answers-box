@@ -43,6 +43,14 @@ public class TagServiceImpl implements TagService {
                 .orElseThrow(() -> new EntityNotFoundException(String.format("Tag with id:%s not found", id))));
     }
 
+    @Override
+    public boolean existsById(final UUID id) {
+        if (!tagRepository.existsById(id)){
+            throw new EntityNotFoundException(String.format("Tag with id:%s not found", id));
+        }
+        return true;
+    }
+
     private boolean existsByName(final String name) {
        if (tagRepository.existsByName(name)) {
            throw new EntityAlreadyProcessedException(String.format("Tag: %s already exist", name));

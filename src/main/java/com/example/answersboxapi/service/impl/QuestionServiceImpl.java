@@ -106,13 +106,15 @@ public class QuestionServiceImpl implements QuestionService {
 
         final List<QuestionDetails> foundDetails = questionsDetailsService.getAllByQuestionId(questionId);
 
-        foundDetails.forEach(questionDetails -> {
-            if (questionDetails.getTagId().equals(tagId)) {
-                foundQuestion.getTagsIds().remove(tagId);
+        if (tagExistsById(tagId)) {
+            foundDetails.forEach(questionDetails -> {
+                if (questionDetails.getTagId().equals(tagId)) {
+                    foundQuestion.getTagsIds().remove(tagId);
 
-                questionsDetailsService.deleteById(questionDetails.getId());
-            }
-        });
+                    questionsDetailsService.deleteById(questionDetails.getId());
+                }
+            });
+        }
         return foundQuestion;
     }
 
@@ -120,5 +122,9 @@ public class QuestionServiceImpl implements QuestionService {
         if (questionRequest.getTitle().isEmpty() || questionRequest.getDescription().isEmpty()) {
             throw new InvalidInputDataException("Empty title or description");
         }
+    }
+
+    private boolean tagExistsById(final UUID id) {
+        return tagService.existsById(id);
     }
 }

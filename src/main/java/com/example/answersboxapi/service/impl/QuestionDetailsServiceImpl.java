@@ -36,7 +36,7 @@ public class QuestionDetailsServiceImpl implements QuestionDetailsService {
     @Override
     public List<QuestionDetails> getAllByQuestionId(final UUID id) {
         return QUESTION_DETAILS_MAPPER.toModelList(
-                questionDetailsRepository.findByQuestionId(id));
+                questionDetailsRepository.findAllByQuestionId(id));
     }
 
     @Override

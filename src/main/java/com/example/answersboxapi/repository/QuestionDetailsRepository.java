@@ -17,7 +17,7 @@ public interface QuestionDetailsRepository extends JpaRepository<QuestionDetails
     QuestionDetailsEntity create(@Param("questionId") final UUID questionId, @Param("tagId") final UUID tagId);
 
     @Query(value = "SELECT * FROM question_details WHERE question_id = :questionId", nativeQuery = true)
-    List<QuestionDetailsEntity> findByQuestionId(@Param("questionId") final UUID questionID);
+    List<QuestionDetailsEntity> findAllByQuestionId(@Param("questionId") final UUID questionId);
 
     @Modifying
     @Query(value = "DELETE FROM question_details WHERE id = :id", nativeQuery = true)
