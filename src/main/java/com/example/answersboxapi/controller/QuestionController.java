@@ -34,8 +34,10 @@ public class QuestionController {
 
     @GetMapping("/all")
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "getAll")
-    public ResponseEntity<List<Question>> getAll(@RequestParam(defaultValue = "1") final int page, @RequestParam(defaultValue = "10") final int size) {
-        final Page<Question> foundQuestions = questionService.getAll(page, size);
+    public ResponseEntity<List<Question>> getAll(@RequestParam(defaultValue = "1") final int page,
+                                                 @RequestParam(defaultValue = "10") final int size,
+                                                 @RequestParam final List<UUID> tagIds) {
+        final Page<Question> foundQuestions = questionService.getAll(page, size, tagIds);
         final MultiValueMap<String, String> headers = generateHeaders(foundQuestions);
 
         return new ResponseEntity<>(foundQuestions.getContent(), headers, HttpStatus.OK);
@@ -45,17 +47,6 @@ public class QuestionController {
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "get answers by id")
     public ResponseEntity<List<Answer>> getByQuestionId(@PathVariable final UUID id) {
         return new ResponseEntity<>(questionService.getAnswersByQuestionId(id), HttpStatus.OK);
-    }
-
-    @GetMapping("/filter/tag")
-    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "filter all questions by tag id")
-    public ResponseEntity<List<Question>> getAllFilteredByTagId(@RequestParam(defaultValue = "1") final int page,
-                                                                @RequestParam(defaultValue = "10") final int size,
-                                                                @RequestBody final List<UUID> tagId) {
-        final Page<Question> filteredQuestions = questionService.getAllFilteredByTagId(page, size, tagId);
-        final MultiValueMap<String, String> headers = generateHeaders(filteredQuestions);
-
-        return new ResponseEntity<>(filteredQuestions.getContent(), headers, HttpStatus.OK);
     }
 
     @PutMapping("/{questionId}/add-tag/{tagId}")

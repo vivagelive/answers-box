@@ -14,11 +14,9 @@ public interface QuestionService {
 
     Question getById(final UUID id);
 
-    Page<Question> getAll(final int page, final int size);
+    Page<Question> getAll(final int page, final int size, final List<UUID> tagIds);
 
     List<Answer> getAnswersByQuestionId(final UUID questionId);
-
-    Page<Question> getAllFilteredByTagId(final int page, final int size, final List<UUID> tagId);
 
     Question addTagToQuestion(final UUID questionId, final UUID tagId);
 

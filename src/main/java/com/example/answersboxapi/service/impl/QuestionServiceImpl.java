@@ -81,29 +81,19 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public Page<Question> getAll(final int page, final int size) {
-        return questionRepository.findAll(toPageRequest(page, size), isAdmin()).map(QUESTION_MAPPER::toModel);
+    public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds) {
+        final Page<Question> foundQuestions =
+                questionRepository.findAll(toPageRequest(page, size), isAdmin()).map(QUESTION_MAPPER::toModel);
+
+        if (!tagIds.isEmpty()) {
+            return filterByTagId(foundQuestions, tagIds);
+        }
+        return foundQuestions;
     }
 
     @Override
     public List<Answer> getAnswersByQuestionId(final UUID questionId) {
         return answerService.getByQuestionId(questionId);
-    }
-
-    @Override
-    public Page<Question> getAllFilteredByTagId(final int page, final int size, final List<UUID> tagId) {
-        if (!tagId.isEmpty()) {
-            final Page<Question> foundQuestions = getAll(page, size);
-
-            final List<Question> filteredQuestions = foundQuestions.getContent().stream()
-                    .filter(question -> question.getTagsIds().stream()
-                            .anyMatch(tagId::contains))
-                    .collect(Collectors.toList());
-
-            return new PageImpl<>(filteredQuestions, toPageRequest(page, size), filteredQuestions.size());
-        } else {
-            throw new EntityNotFoundException("List of tags is empty");
-        }
     }
 
     @Override
@@ -146,5 +136,14 @@ public class QuestionServiceImpl implements QuestionService {
 
     private boolean tagExistsById(final UUID id) {
         return tagService.existsById(id);
+    }
+
+    private Page<Question> filterByTagId(final Page<Question> foundQuestions, final List<UUID> tagId) {
+        final List<Question> filteredQuestions = foundQuestions.getContent().stream()
+                .filter(question -> question.getTagsIds().stream()
+                        .anyMatch(tagId::contains))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(filteredQuestions, toPageRequest(foundQuestions.getTotalPages(), foundQuestions.getSize()), filteredQuestions.size());
     }
 }
