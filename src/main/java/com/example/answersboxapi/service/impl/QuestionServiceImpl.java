@@ -82,13 +82,11 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds) {
-        final Page<Question> foundQuestions =
-                questionRepository.findAll(toPageRequest(page, size), isAdmin()).map(QUESTION_MAPPER::toModel);
-
         if (!tagIds.isEmpty()) {
-            return filterByTagId(foundQuestions, tagIds);
+            return questionRepository.filteredQuestions(toPageRequest(page, size), tagIds).map(QUESTION_MAPPER::toModel);
+        } else {
+            return questionRepository.findAll(toPageRequest(page, size), isAdmin()).map(QUESTION_MAPPER::toModel);
         }
-        return foundQuestions;
     }
 
     @Override
