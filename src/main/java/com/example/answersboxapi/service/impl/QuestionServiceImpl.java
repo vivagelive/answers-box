@@ -82,11 +82,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds) {
-        if (!tagIds.isEmpty()) {
-            return questionRepository.filteredQuestions(toPageRequest(page, size), tagIds).map(QUESTION_MAPPER::toModel);
-        } else {
-            return questionRepository.findAll(toPageRequest(page, size), isAdmin()).map(QUESTION_MAPPER::toModel);
-        }
+        return questionRepository.findAll(toPageRequest(page, size), tagIds, isAdmin()).map(QUESTION_MAPPER::toModel);
     }
 
     @Override
@@ -134,14 +130,5 @@ public class QuestionServiceImpl implements QuestionService {
 
     private boolean tagExistsById(final UUID id) {
         return tagService.existsById(id);
-    }
-
-    private Page<Question> filterByTagId(final Page<Question> foundQuestions, final List<UUID> tagId) {
-        final List<Question> filteredQuestions = foundQuestions.getContent().stream()
-                .filter(question -> question.getTagsIds().stream()
-                        .anyMatch(tagId::contains))
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(filteredQuestions, toPageRequest(foundQuestions.getTotalPages(), foundQuestions.getSize()), filteredQuestions.size());
     }
 }

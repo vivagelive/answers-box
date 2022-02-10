@@ -107,13 +107,11 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final Question savedQuestion = createQuestion(token, questionRequest);
         insertDeletedQuestion(generateQuestionRequest(), savedUser);
 
-        final List<Object> emptyList = Collections.emptyList();
-
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(emptyList)))
+                        .param("tagIds", ""))
                         .andExpect(status().isOk());
 
         final List<Question> foundQuestions =
@@ -142,13 +140,11 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final Question savedQuestion = createQuestion(usersToken, questionRequest);
         insertDeletedQuestion(generateQuestionRequest(), savedUser);
 
-        final List<Object> emptyList = Collections.emptyList();
-
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(emptyList)))
+                        .param("tagIds", ""))
                         .andExpect(status().isOk());
 
         final List<Question> foundQuestions =
@@ -432,7 +428,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final MvcResult result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + usersToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(List.of(mainTag.getId()))))
+                        .param("tagIds", mainTag.getId().toString()))
                         .andExpect(status().isOk())
                         .andReturn();
 
