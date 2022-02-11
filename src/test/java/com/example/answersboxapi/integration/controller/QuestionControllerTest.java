@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -104,14 +103,18 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         final QuestionRequest questionRequest = generateQuestionRequest();
 
+        final Tag savedTag = saveTag();
+
         final Question savedQuestion = createQuestion(token, questionRequest);
         insertDeletedQuestion(generateQuestionRequest(), savedUser);
+
+        insertQuestionDetails(savedQuestion, savedTag);
 
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("tagIds", ""))
+                        .param("tagIds", savedTag.getId().toString()))
                         .andExpect(status().isOk());
 
         final List<Question> foundQuestions =
@@ -137,14 +140,19 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         final QuestionRequest questionRequest = generateQuestionRequest();
 
+        final Tag savedTag = saveTag();
+
         final Question savedQuestion = createQuestion(usersToken, questionRequest);
-        insertDeletedQuestion(generateQuestionRequest(), savedUser);
+        final Question deletedQuestion = insertDeletedQuestion(generateQuestionRequest(), savedUser);
+
+        insertQuestionDetails(savedQuestion, savedTag);
+        insertQuestionDetails(deletedQuestion, savedTag);
 
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("tagIds", ""))
+                        .param("tagIds", savedTag.getId().toString()))
                         .andExpect(status().isOk());
 
         final List<Question> foundQuestions =

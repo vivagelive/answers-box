@@ -14,8 +14,11 @@ import java.util.UUID;
 @Repository
 public interface QuestionRepository extends JpaRepository<QuestionEntity, UUID> {
 
-    @Query(value = "SELECT * FROM question INNER JOIN question_details " +
-            "ON question.id = question_details.question_id " +
-            "AND COALESCE(question_details.tag_id IN :tagIds, :isAdmin = true OR question.deleted_at IS NULL)", nativeQuery = true)
+    @Query(value = "SELECT *" +
+            "FROM question" +
+            "         INNER JOIN question_details ON question.id = question_details.question_id AND" +
+            "                                        (COALESCE(:tagIds, null) IS NULL OR question_details.tag_id IN :tagIds)" +
+            "WHERE :isAdmin = TRUE" +
+            "   OR question.deleted_at IS NULL ", nativeQuery = true)
     Page<QuestionEntity> findAll(final Pageable pageable, @Param("tagIds") final List<UUID> tagIds, @Param("isAdmin") final boolean isAdmin);
 }
