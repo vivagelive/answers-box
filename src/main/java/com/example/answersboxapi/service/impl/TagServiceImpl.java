@@ -52,9 +52,9 @@ public class TagServiceImpl implements TagService {
     }
 
     private boolean existsByName(final String name) {
-       if (tagRepository.existsByName(name)) {
-           throw new EntityAlreadyProcessedException(String.format("Tag: %s already exist", name));
-       }
-       return false;
+        if (tagRepository.existsByName(name)) {
+            throw new EntityAlreadyProcessedException(String.format("Tag: %s already exist", name));
+        }
+        return false;
     }
 }

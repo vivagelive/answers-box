@@ -101,14 +101,21 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         final TokenResponse token = createSignIn(signUpRequest);
 
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final QuestionRequest questionRequest = generateQuestionRequest();
+
+        final Tag savedTag = saveTag();
+
+        final Question savedQuestion = createQuestion(token, questionRequest);
         insertDeletedQuestion(generateQuestionRequest(), savedUser);
+
+        insertQuestionDetails(savedQuestion, savedTag);
 
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("tagIds", savedTag.getId().toString()))
+                        .andExpect(status().isOk());
 
         final List<Question> foundQuestions =
                 objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), new TypeReference<>() {});
@@ -127,19 +134,26 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final User savedUser = insertUser(signUpUserRequest);
         final TokenResponse usersToken = createSignIn(signUpUserRequest);
 
-
         final SignUpRequest signUpAdminRequest = generateSignUpRequest();
         insertAdmin(signUpAdminRequest);
         final TokenResponse adminsToken = createSignIn(signUpAdminRequest);
 
-        final Question savedQuestion = createQuestion(usersToken, generateQuestionRequest());
-        insertDeletedQuestion(generateQuestionRequest(), savedUser);
+        final QuestionRequest questionRequest = generateQuestionRequest();
+
+        final Tag savedTag = saveTag();
+
+        final Question savedQuestion = createQuestion(usersToken, questionRequest);
+        final Question deletedQuestion = insertDeletedQuestion(generateQuestionRequest(), savedUser);
+
+        insertQuestionDetails(savedQuestion, savedTag);
+        insertQuestionDetails(deletedQuestion, savedTag);
 
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("tagIds", savedTag.getId().toString()))
+                        .andExpect(status().isOk());
 
         final List<Question> foundQuestions =
                 objectMapper.readValue(result.andReturn().getResponse().getContentAsByteArray(), new TypeReference<>() {});
@@ -158,7 +172,9 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final User savedUser = insertUser(signUpRequest);
         final TokenResponse token = createSignIn(signUpRequest);
 
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final QuestionRequest questionRequest = generateQuestionRequest();
+
+        final Question savedQuestion = createQuestion(token, questionRequest);
 
         final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
         insertDeletedAnswer(generateAnswerRequest(), savedUser, savedQuestion);
@@ -167,8 +183,8 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final MvcResult result = mockMvc.perform(get(format(QUESTION_URL + "/%s/answers", savedQuestion.getId()))
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+                        .andExpect(status().isOk())
+                        .andReturn();
 
         final List<Answer> foundAnswers =
                 objectMapper.readValue(result.getResponse().getContentAsByteArray(), new TypeReference<>() {});
@@ -187,21 +203,23 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final User savedUser = insertUser(signUpUserRequest);
         final TokenResponse usersToken = createSignIn(signUpUserRequest);
 
-        final Question savedQuestion = createQuestion(usersToken, generateQuestionRequest());
-
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), usersToken);
-        insertDeletedAnswer(generateAnswerRequest(), savedUser, savedQuestion);
-
         final SignUpRequest signUpAdminRequest = generateSignUpRequest();
         insertAdmin(signUpAdminRequest);
         final TokenResponse adminsToken = createSignIn(signUpAdminRequest);
+
+        final QuestionRequest questionRequest = generateQuestionRequest();
+
+        final Question savedQuestion = createQuestion(usersToken, questionRequest);
+
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), usersToken);
+        insertDeletedAnswer(generateAnswerRequest(), savedUser, savedQuestion);
 
         //when
         final MvcResult result = mockMvc.perform(get(format(QUESTION_URL + "/%s/answers", savedQuestion.getId()))
                         .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+                        .andExpect(status().isOk())
+                        .andReturn();
 
         final List<Answer> foundAnswers =
                 objectMapper.readValue(result.getResponse().getContentAsByteArray(), new TypeReference<>() {});

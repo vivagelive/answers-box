@@ -34,8 +34,10 @@ public class QuestionController {
 
     @GetMapping("/all")
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "getAll")
-    public ResponseEntity<List<Question>> getAll(@RequestParam(defaultValue = "1") final int page, @RequestParam(defaultValue = "10") final int size) {
-        final Page<Question> foundQuestions = questionService.getAll(page, size);
+    public ResponseEntity<List<Question>> getAll(@RequestParam(defaultValue = "1") final int page,
+                                                 @RequestParam(defaultValue = "10") final int size,
+                                                 @RequestParam final List<UUID> tagIds) {
+        final Page<Question> foundQuestions = questionService.getAll(page, size, tagIds);
         final MultiValueMap<String, String> headers = generateHeaders(foundQuestions);
 
         return new ResponseEntity<>(foundQuestions.getContent(), headers, HttpStatus.OK);
@@ -47,7 +49,7 @@ public class QuestionController {
         return new ResponseEntity<>(questionService.getAnswersByQuestionId(id), HttpStatus.OK);
     }
 
-    @PutMapping ("/{questionId}/add-tag/{tagId}")
+    @PutMapping("/{questionId}/add-tag/{tagId}")
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "add tag by question id")
     public ResponseEntity<Question> addTagToQuestion(@PathVariable final UUID questionId, @PathVariable final UUID tagId) {
         return new ResponseEntity<>(questionService.addTagToQuestion(questionId, tagId), HttpStatus.OK);

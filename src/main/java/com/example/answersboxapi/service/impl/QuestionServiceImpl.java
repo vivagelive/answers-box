@@ -14,12 +14,14 @@ import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.service.*;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
@@ -63,7 +65,9 @@ public class QuestionServiceImpl implements QuestionService {
                     .createdAt(Instant.now())
                     .build();
 
-            return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(questionEntity));
+            final QuestionEntity savedQuestion = questionRepository.saveAndFlush(questionEntity);
+
+            return QUESTION_MAPPER.toModel(savedQuestion);
 
         } else {
             throw new AccessDeniedException("Admin can`t create a question");
@@ -77,8 +81,8 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public Page<Question> getAll(final int page, final int size) {
-        return questionRepository.findAll(toPageRequest(page, size), isAdmin()).map(QUESTION_MAPPER::toModel);
+    public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds) {
+        return questionRepository.findAll(toPageRequest(page, size), tagIds, isAdmin()).map(QUESTION_MAPPER::toModel);
     }
 
     @Override
