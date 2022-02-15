@@ -412,41 +412,4 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         //then
         result.andExpect(status().isUnauthorized());
     }
-
-    @Test
-    public void getAllFilteredByTagId_happyPath() throws Exception {
-        //given
-        final SignUpRequest signUpUserRequest = generateSignUpRequest();
-        final User savedUser = insertUser(signUpUserRequest);
-        final TokenResponse usersToken = createSignIn(signUpUserRequest);
-
-        final Tag mainTag = saveTag();
-        saveTag();
-
-        final QuestionRequest questionRequest = generateQuestionRequest();
-
-        final QuestionRequest secondaryRequest = generateQuestionRequest();
-
-        final Question savedQuestion = createQuestion(usersToken, questionRequest);
-        createQuestion(usersToken, secondaryRequest);
-
-        insertQuestionDetails(savedQuestion, mainTag);
-
-        //when
-        final MvcResult result = mockMvc.perform(get(QUESTION_URL + "/all")
-                        .header(AUTHORIZATION, TOKEN_PREFIX + usersToken.getAccessToken())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .param("tagIds", mainTag.getId().toString()))
-                        .andExpect(status().isOk())
-                        .andReturn();
-
-        final List<Question> filteredQuestions =
-                objectMapper.readValue(result.getResponse().getContentAsByteArray(), new TypeReference<>() {});
-
-        //then
-        assertAll(
-                () -> assertEquals(1, filteredQuestions.size()),
-                () -> assertQuestionsListFields(filteredQuestions, savedUser, savedQuestion)
-        );
-    }
 }
