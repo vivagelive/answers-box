@@ -3,6 +3,7 @@ package com.example.answersboxapi.integration.controller;
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
+import com.example.answersboxapi.model.answer.AnswerUpdateRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
@@ -17,7 +18,10 @@ import java.util.UUID;
 
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
 import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertAnswerFieldsEquals;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class AnswerControllerTest extends AbstractIntegrationTest {
@@ -125,5 +129,101 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void update_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        final User savedUser = insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        final AnswerUpdateRequest updateAnswerRequest = generateAnswerUpdateRequest();
+        updateAnswerRequest.setAnswerId(savedAnswer.getId());
+
+        //when
+        final MvcResult result = mockMvc.perform(put(ANSWER_URL)
+                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateAnswerRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        final Answer updatedAnswer = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Answer.class);
+
+        //then
+        assertAll(
+                () -> assertEquals(updateAnswerRequest.getText(), updatedAnswer.getText()),
+                () -> assertAnswerFieldsEquals(savedAnswer, savedUser, savedQuestion)
+        );
+    }
+
+    @Test
+    public void update_withUserAccess() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse answerCreatorToken = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(answerCreatorToken, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), answerCreatorToken);
+
+        final AnswerUpdateRequest updateAnswerRequest = generateAnswerUpdateRequest();
+        updateAnswerRequest.setAnswerId(savedAnswer.getId());
+
+        final SignUpRequest usersRequest = generateSignUpRequest();
+        insertUser(usersRequest);
+        final TokenResponse usersToken = createSignIn(usersRequest);
+
+        //when
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL)
+                .header(AUTHORIZATION, TOKEN_PREFIX + usersToken.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateAnswerRequest)));
+
+        //then
+        result.andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void update_withAdminAccess() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        final User savedUser = insertUser(signUpRequest);
+
+        final TokenResponse usersToken = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(usersToken, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), usersToken);
+
+        final AnswerUpdateRequest updateAnswerRequest = generateAnswerUpdateRequest();
+        updateAnswerRequest.setAnswerId(savedAnswer.getId());
+
+        final SignUpRequest adminsRequest = generateSignUpRequest();
+        insertAdmin(adminsRequest);
+
+        final TokenResponse adminsToken = createSignIn(adminsRequest);
+
+        //when
+        final MvcResult result = mockMvc.perform(put(ANSWER_URL)
+                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateAnswerRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        final Answer updatedAnswer = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Answer.class);
+
+        //then
+
+        assertAll(
+                () -> assertEquals(updateAnswerRequest.getText(), updatedAnswer.getText()),
+                () -> assertAnswerFieldsEquals(savedAnswer, savedUser, savedQuestion)
+        );
     }
 }
