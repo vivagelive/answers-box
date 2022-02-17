@@ -1,10 +1,13 @@
 package com.example.answersboxapi.utils;
 
 import com.example.answersboxapi.enums.UserEntityRole;
+import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.model.UserDetailsImpl;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.UUID;
 
 @UtilityClass
 public class SecurityUtils {
@@ -20,5 +23,11 @@ public class SecurityUtils {
     public static boolean isAdmin(){
         final UserDetailsImpl userDetails = getCurrentUser();
         return (userDetails != null && userDetails.getRole().equals(UserEntityRole.ROLE_ADMIN));
+    }
+
+    public static void checkAccess(final UUID userIdInAnswer, final UUID currentUserId) {
+        if (!(userIdInAnswer.equals(currentUserId) || isAdmin())) {
+            throw new AccessDeniedException("Low access to update answer");
+        }
     }
 }

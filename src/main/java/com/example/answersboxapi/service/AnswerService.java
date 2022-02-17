@@ -13,5 +13,5 @@ public interface AnswerService {
 
     List<Answer> getByQuestionId(final UUID questionId);
 
-    Answer update(final AnswerUpdateRequest answerUpdateRequest);
+    Answer updateById(final UUID id, final AnswerUpdateRequest answerUpdateRequest);
 }

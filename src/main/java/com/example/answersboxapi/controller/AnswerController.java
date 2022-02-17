@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/answers")
@@ -25,9 +27,9 @@ public class AnswerController {
         return new ResponseEntity<>(answerService.create(answerRequest), HttpStatus.CREATED);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "update answer")
-    public ResponseEntity<Answer> update(@RequestBody final AnswerUpdateRequest answerUpdateRequest) {
-        return new ResponseEntity<>(answerService.update(answerUpdateRequest), HttpStatus.OK);
+    public ResponseEntity<Answer> update(@PathVariable("id") final UUID id, @RequestBody final AnswerUpdateRequest answerUpdateRequest) {
+        return new ResponseEntity<>(answerService.updateById(id, answerUpdateRequest), HttpStatus.OK);
     }
 }
