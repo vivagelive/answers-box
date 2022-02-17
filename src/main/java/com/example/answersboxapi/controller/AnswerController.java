@@ -29,7 +29,7 @@ public class AnswerController {
 
     @PutMapping("/{id}")
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "update answer")
-    public ResponseEntity<Answer> update(@PathVariable("id") final UUID id, @RequestBody final AnswerUpdateRequest answerUpdateRequest) {
+    public ResponseEntity<Answer> update(@PathVariable final UUID id, @RequestBody final AnswerUpdateRequest answerUpdateRequest) {
         return new ResponseEntity<>(answerService.updateById(id, answerUpdateRequest), HttpStatus.OK);
     }
 }
