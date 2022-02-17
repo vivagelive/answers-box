@@ -1,10 +1,13 @@
 package com.example.answersboxapi.utils;
 
 import com.example.answersboxapi.enums.UserEntityRole;
+import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.model.UserDetailsImpl;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.UUID;
 
 @UtilityClass
 public class SecurityUtils {
