@@ -24,7 +24,6 @@ import java.util.UUID;
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
-import static com.example.answersboxapi.utils.SecurityUtils.checkAccess;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 import static java.lang.String.*;
 
@@ -92,5 +91,11 @@ public class AnswerServiceImpl implements AnswerService {
     private AnswerEntity searchAnswer(final UUID answerId) {
         return answerRepository.findById(answerId)
                 .orElseThrow(() -> new EntityNotFoundException(format("Answer with id: %s not found", answerId)));
+    }
+
+    private void checkAccess(final UUID userIdInAnswer, final UUID currentUserId) {
+        if (!(userIdInAnswer.equals(currentUserId) || isAdmin())) {
+            throw new AccessDeniedException("Low access to update answer");
+        }
     }
 }

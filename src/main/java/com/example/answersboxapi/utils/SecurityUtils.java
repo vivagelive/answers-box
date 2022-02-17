@@ -24,10 +24,4 @@ public class SecurityUtils {
         final UserDetailsImpl userDetails = getCurrentUser();
         return (userDetails != null && userDetails.getRole().equals(UserEntityRole.ROLE_ADMIN));
     }
-
-    public static void checkAccess(final UUID userIdInAnswer, final UUID currentUserId) {
-        if (!(userIdInAnswer.equals(currentUserId) || isAdmin())) {
-            throw new AccessDeniedException("Low access to update answer");
-        }
-    }
 }
