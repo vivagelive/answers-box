@@ -25,7 +25,7 @@ public class SecurityUtils {
         return (userDetails != null && userDetails.getRole().equals(UserEntityRole.ROLE_ADMIN));
     }
 
-    public static boolean checkAccess(final UUID userId, final UUID currentUserId) {
+    public static boolean hasAccess(final UUID userId, final UUID currentUserId) {
         return userId.equals(currentUserId) || isAdmin();
     }
 }

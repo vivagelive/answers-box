@@ -24,7 +24,7 @@ import java.util.UUID;
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
-import static com.example.answersboxapi.utils.SecurityUtils.checkAccess;
+import static com.example.answersboxapi.utils.SecurityUtils.hasAccess;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 import static java.lang.String.*;
 
@@ -44,7 +44,9 @@ public class AnswerServiceImpl implements AnswerService {
 
         checkAnswerText(answerRequest);
 
-        if (!isAdmin()) {
+        if (isAdmin()) {
+            throw new AccessDeniedException("Admin can`t create an answer");
+        }
             final Question foundQuestion = questionService.getById(answerRequest.getQuestionId());
 
             final AnswerEntity answerToSave = AnswerEntity.builder()
@@ -56,10 +58,6 @@ public class AnswerServiceImpl implements AnswerService {
                     .build();
 
             return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(answerToSave));
-
-        } else {
-            throw new AccessDeniedException("Admin can`t create an answer");
-        }
     }
 
     @Override
@@ -75,7 +73,7 @@ public class AnswerServiceImpl implements AnswerService {
 
         final AnswerEntity foundAnswer = searchAnswer(id);
 
-        if (checkAccess(foundAnswer.getUser().getId(), currentUser.getId())) {
+        if (hasAccess(foundAnswer.getUser().getId(), currentUser.getId())) {
 
             foundAnswer.setText(answerUpdateRequest.getText());
             foundAnswer.setUpdatedAt(Instant.now());

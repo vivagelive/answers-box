@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
-import static com.example.answersboxapi.utils.SecurityUtils.checkAccess;
+import static com.example.answersboxapi.utils.SecurityUtils.hasAccess;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 import static com.example.answersboxapi.utils.pagination.PagingUtils.toPageRequest;
 
@@ -128,8 +128,9 @@ public class QuestionServiceImpl implements QuestionService {
 
         final QuestionEntity foundQuestion = QUESTION_MAPPER.toEntity(getById(id));
 
-        if (checkAccess(foundQuestion.getUser().getId(), currentUser.getId())) {
-
+        if (!hasAccess(foundQuestion.getUser().getId(), currentUser.getId())) {
+            throw new AccessDeniedException("Low access to update question");
+        }
             checkQuestionFields(questionUpdateRequest.getTitle(), questionUpdateRequest.getDescription());
 
             foundQuestion.setUpdatedAt(Instant.now());
@@ -137,8 +138,6 @@ public class QuestionServiceImpl implements QuestionService {
             foundQuestion.setDescription(questionUpdateRequest.getDescription());
 
             return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(foundQuestion));
-        }
-        throw new AccessDeniedException("Low access to update question");
     }
 
     private void checkQuestionFields(final String title, final String description) {
