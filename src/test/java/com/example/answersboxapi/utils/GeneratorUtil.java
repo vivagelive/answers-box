@@ -8,6 +8,7 @@ import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenRequest;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.question.QuestionUpdateRequest;
 import com.example.answersboxapi.model.tag.TagRequest;
 import com.github.javafaker.Faker;
 
@@ -114,6 +115,20 @@ public class GeneratorUtil {
     public static AnswerUpdateRequest generateAnswerUpdateRequest() {
         return AnswerUpdateRequest.builder()
                 .text(FAKER.name().title())
+                .build();
+    }
+
+    public static QuestionUpdateRequest generateQuestionUpdateRequest() {
+        return QuestionUpdateRequest.builder()
+                .title(FAKER.name().title())
+                .description(FAKER.name().name())
+                .build();
+    }
+
+    public static QuestionUpdateRequest generateQuestionUpdateWithEmptyFields() {
+        return QuestionUpdateRequest.builder()
+                .title("")
+                .description("")
                 .build();
     }
 }

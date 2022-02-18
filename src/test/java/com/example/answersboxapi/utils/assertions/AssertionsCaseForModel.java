@@ -68,4 +68,14 @@ public class AssertionsCaseForModel {
                 () -> assertEquals(savedTag.getId(), foundQuestion.getTagsIds().stream().findFirst().get())
         );
     }
+
+    public static void assertQuestionUpdatedFields(final Question updatedQuestion, final Question savedQuestion) {
+        assertAll(
+                () -> assertNotNull(updatedQuestion),
+                () -> assertEquals(savedQuestion.getId(), updatedQuestion.getId()),
+                () -> assertEquals(savedQuestion.getUserId(), updatedQuestion.getUserId()),
+                () -> assertNotEquals(savedQuestion.getTitle(), updatedQuestion.getTitle()),
+                () -> assertNotEquals(savedQuestion.getDescription(), updatedQuestion.getDescription())
+        );
+    }
 }

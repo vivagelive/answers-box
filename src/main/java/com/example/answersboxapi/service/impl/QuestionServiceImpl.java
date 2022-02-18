@@ -8,23 +8,23 @@ import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionDetails;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.question.QuestionUpdateRequest;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.service.*;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
+import static com.example.answersboxapi.utils.SecurityUtils.checkAccess;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 import static com.example.answersboxapi.utils.pagination.PagingUtils.toPageRequest;
 
@@ -54,7 +54,7 @@ public class QuestionServiceImpl implements QuestionService {
     public Question create(final QuestionRequest questionRequest) {
         final User currentUser = userService.getCurrent();
 
-        checkQuestionFields(questionRequest);
+        checkQuestionFields(questionRequest.getTitle(), questionRequest.getDescription());
 
         if (!isAdmin()) {
             final QuestionEntity questionEntity = QuestionEntity.builder()
@@ -122,8 +122,27 @@ public class QuestionServiceImpl implements QuestionService {
         return foundQuestion;
     }
 
-    private void checkQuestionFields(final QuestionRequest questionRequest) {
-        if (questionRequest.getTitle().isEmpty() || questionRequest.getDescription().isEmpty()) {
+    @Override
+    public Question updateById(final UUID id, final QuestionUpdateRequest questionUpdateRequest) {
+        final User currentUser = userService.getCurrent();
+
+        final QuestionEntity foundQuestion = QUESTION_MAPPER.toEntity(getById(id));
+
+        if (checkAccess(foundQuestion.getUser().getId(), currentUser.getId())) {
+
+            checkQuestionFields(questionUpdateRequest.getTitle(), questionUpdateRequest.getDescription());
+
+            foundQuestion.setUpdatedAt(Instant.now());
+            foundQuestion.setTitle(questionUpdateRequest.getTitle());
+            foundQuestion.setDescription(questionUpdateRequest.getDescription());
+
+            return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(foundQuestion));
+        }
+        throw new AccessDeniedException("Low access to update question");
+    }
+
+    private void checkQuestionFields(final String title, final String description) {
+        if (title.isEmpty() || description.isEmpty()) {
             throw new InvalidInputDataException("Empty title or description");
         }
     }
