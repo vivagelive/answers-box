@@ -4,6 +4,7 @@ import com.example.answersboxapi.config.SwaggerConfig;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.question.QuestionUpdateRequest;
 import com.example.answersboxapi.service.QuestionService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -59,6 +60,12 @@ public class QuestionController {
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "remove tag by question id")
     public ResponseEntity<Question> removeTagFromQuestion(@PathVariable final UUID questionId, @PathVariable final UUID tagId) {
         return new ResponseEntity<>(questionService.removeTagFromQuestion(questionId, tagId), HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "update by question id")
+    public ResponseEntity<Question> update(@PathVariable final UUID id, @RequestBody final QuestionUpdateRequest questionUpdateRequest) {
+        return new ResponseEntity<>(questionService.updateById(id, questionUpdateRequest), HttpStatus.OK);
     }
 
 }

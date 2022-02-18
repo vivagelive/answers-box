@@ -6,6 +6,7 @@ import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.question.QuestionUpdateRequest;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.user.User;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -411,5 +412,117 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void update_happyPath() throws Exception {
+        //given
+        SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final QuestionUpdateRequest questionUpdateRequest = generateQuestionUpdateRequest();
+
+        //when
+        final MvcResult result = mockMvc.perform(put(QUESTION_URL + "/{id}", savedQuestion.getId())
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionUpdateRequest)))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        final Question updatedQuestion = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Question.class);
+
+        //then
+        assertQuestionUpdatedFields(updatedQuestion, savedQuestion);
+    }
+
+    @Test
+    public void update_whenUserNotCreatorOfQuestion() throws Exception {
+        //given
+        SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse questionCreatorToken = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(questionCreatorToken, generateQuestionRequest());
+
+        SignUpRequest userRequest = generateSignUpRequest();
+        insertUser(userRequest);
+        final TokenResponse userToken = createSignIn(userRequest);
+
+        final QuestionUpdateRequest questionUpdateRequest = generateQuestionUpdateRequest();
+
+        //when
+        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}", savedQuestion.getId())
+                        .header(AUTHORIZATION, TOKEN_PREFIX + userToken.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionUpdateRequest)));
+
+        //then
+        result.andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void update_whenQuestionNotFound() throws Exception {
+        //given
+        SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final QuestionUpdateRequest questionUpdateRequest = generateQuestionUpdateRequest();
+
+        final UUID notExistingId = UUID.randomUUID();
+
+        //when
+        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}", notExistingId)
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionUpdateRequest)));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void update_whenNotSignedIn() throws Exception {
+        //given
+        SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final QuestionUpdateRequest questionUpdateRequest = generateQuestionUpdateRequest();
+
+        //when
+        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}", savedQuestion.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionUpdateRequest)));
+
+        //then
+        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void update_withEmptyFields() throws Exception {
+        //given
+        SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final QuestionUpdateRequest questionUpdateRequest = generateQuestionUpdateWithEmptyFields();
+
+        //when
+        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}", savedQuestion.getId())
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(questionUpdateRequest)));
+
+        //then
+        result.andExpect(status().isBadRequest());
     }
 }

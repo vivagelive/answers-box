@@ -3,6 +3,7 @@ package com.example.answersboxapi.service;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.question.QuestionUpdateRequest;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -21,4 +22,6 @@ public interface QuestionService {
     Question addTagToQuestion(final UUID questionId, final UUID tagId);
 
     Question removeTagFromQuestion(final UUID questionId, final UUID tagId);
+
+    Question updateById(final UUID id, final QuestionUpdateRequest questionUpdateRequest);
 }

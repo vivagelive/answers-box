@@ -24,6 +24,7 @@ import java.util.UUID;
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
+import static com.example.answersboxapi.utils.SecurityUtils.hasAccess;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 import static java.lang.String.*;
 
@@ -43,22 +44,20 @@ public class AnswerServiceImpl implements AnswerService {
 
         checkAnswerText(answerRequest);
 
-        if (!isAdmin()) {
-            final Question foundQuestion = questionService.getById(answerRequest.getQuestionId());
-
-            final AnswerEntity answerToSave = AnswerEntity.builder()
-                    .text(answerRequest.getText())
-                    .rating(0)
-                    .createdAt(Instant.now())
-                    .user(USER_MAPPER.toEntity(currentUser))
-                    .question(QUESTION_MAPPER.toEntity(foundQuestion))
-                    .build();
-
-            return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(answerToSave));
-
-        } else {
+        if (isAdmin()) {
             throw new AccessDeniedException("Admin can`t create an answer");
         }
+        final Question foundQuestion = questionService.getById(answerRequest.getQuestionId());
+
+        final AnswerEntity answerToSave = AnswerEntity.builder()
+                .text(answerRequest.getText())
+                .rating(0)
+                .createdAt(Instant.now())
+                .user(USER_MAPPER.toEntity(currentUser))
+                .question(QUESTION_MAPPER.toEntity(foundQuestion))
+                .build();
+
+        return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(answerToSave));
     }
 
     @Override
@@ -74,8 +73,9 @@ public class AnswerServiceImpl implements AnswerService {
 
         final AnswerEntity foundAnswer = searchAnswer(id);
 
-        checkAccess(foundAnswer.getUser().getId(), currentUser.getId());
-
+        if (!hasAccess(foundAnswer.getUser().getId(), currentUser.getId())) {
+            throw new AccessDeniedException("Low access to update answer");
+        }
         foundAnswer.setText(answerUpdateRequest.getText());
         foundAnswer.setUpdatedAt(Instant.now());
 
@@ -91,11 +91,5 @@ public class AnswerServiceImpl implements AnswerService {
     private AnswerEntity searchAnswer(final UUID answerId) {
         return answerRepository.findById(answerId)
                 .orElseThrow(() -> new EntityNotFoundException(format("Answer with id: %s not found", answerId)));
-    }
-
-    private void checkAccess(final UUID userIdInAnswer, final UUID currentUserId) {
-        if (!(userIdInAnswer.equals(currentUserId) || isAdmin())) {
-            throw new AccessDeniedException("Low access to update answer");
-        }
     }
 }
