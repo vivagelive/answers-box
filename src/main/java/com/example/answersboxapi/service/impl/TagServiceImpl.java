@@ -26,15 +26,14 @@ public class TagServiceImpl implements TagService {
     @Override
     @Transactional
     public Tag create(final TagRequest tagRequest) {
-        if (isAdmin() && !existsByName(tagRequest.getName())) {
-            final TagEntity tagEntity = TagEntity.builder()
-                    .name(tagRequest.getName())
-                    .build();
-
-            return TAG_MAPPER.toModel(tagRepository.saveAndFlush(tagEntity));
-        } else {
+        if (!isAdmin() || existsByName(tagRequest.getName())) {
             throw new AccessDeniedException("Low access to create tag");
         }
+        final TagEntity tagEntity = TagEntity.builder()
+                .name(tagRequest.getName())
+                .build();
+
+        return TAG_MAPPER.toModel(tagRepository.saveAndFlush(tagEntity));
     }
 
     @Override
@@ -45,7 +44,7 @@ public class TagServiceImpl implements TagService {
 
     @Override
     public boolean existsById(final UUID id) {
-        if (!tagRepository.existsById(id)){
+        if (!tagRepository.existsById(id)) {
             throw new EntityNotFoundException(String.format("Tag with id:%s not found", id));
         }
         return true;

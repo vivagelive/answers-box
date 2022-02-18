@@ -56,22 +56,20 @@ public class QuestionServiceImpl implements QuestionService {
 
         checkQuestionFields(questionRequest.getTitle(), questionRequest.getDescription());
 
-        if (!isAdmin()) {
-            final QuestionEntity questionEntity = QuestionEntity.builder()
-                    .rating(0)
-                    .title(questionRequest.getTitle())
-                    .description(questionRequest.getDescription())
-                    .user(USER_MAPPER.toEntity(currentUser))
-                    .createdAt(Instant.now())
-                    .build();
-
-            final QuestionEntity savedQuestion = questionRepository.saveAndFlush(questionEntity);
-
-            return QUESTION_MAPPER.toModel(savedQuestion);
-
-        } else {
+        if (isAdmin()) {
             throw new AccessDeniedException("Admin can`t create a question");
         }
+        final QuestionEntity questionEntity = QuestionEntity.builder()
+                .rating(0)
+                .title(questionRequest.getTitle())
+                .description(questionRequest.getDescription())
+                .user(USER_MAPPER.toEntity(currentUser))
+                .createdAt(Instant.now())
+                .build();
+
+        final QuestionEntity savedQuestion = questionRepository.saveAndFlush(questionEntity);
+
+        return QUESTION_MAPPER.toModel(savedQuestion);
     }
 
     @Override
@@ -131,13 +129,13 @@ public class QuestionServiceImpl implements QuestionService {
         if (!hasAccess(foundQuestion.getUser().getId(), currentUser.getId())) {
             throw new AccessDeniedException("Low access to update question");
         }
-            checkQuestionFields(questionUpdateRequest.getTitle(), questionUpdateRequest.getDescription());
+        checkQuestionFields(questionUpdateRequest.getTitle(), questionUpdateRequest.getDescription());
 
-            foundQuestion.setUpdatedAt(Instant.now());
-            foundQuestion.setTitle(questionUpdateRequest.getTitle());
-            foundQuestion.setDescription(questionUpdateRequest.getDescription());
+        foundQuestion.setUpdatedAt(Instant.now());
+        foundQuestion.setTitle(questionUpdateRequest.getTitle());
+        foundQuestion.setDescription(questionUpdateRequest.getDescription());
 
-            return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(foundQuestion));
+        return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(foundQuestion));
     }
 
     private void checkQuestionFields(final String title, final String description) {

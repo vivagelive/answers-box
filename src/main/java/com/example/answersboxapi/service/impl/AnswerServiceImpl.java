@@ -47,17 +47,17 @@ public class AnswerServiceImpl implements AnswerService {
         if (isAdmin()) {
             throw new AccessDeniedException("Admin can`t create an answer");
         }
-            final Question foundQuestion = questionService.getById(answerRequest.getQuestionId());
+        final Question foundQuestion = questionService.getById(answerRequest.getQuestionId());
 
-            final AnswerEntity answerToSave = AnswerEntity.builder()
-                    .text(answerRequest.getText())
-                    .rating(0)
-                    .createdAt(Instant.now())
-                    .user(USER_MAPPER.toEntity(currentUser))
-                    .question(QUESTION_MAPPER.toEntity(foundQuestion))
-                    .build();
+        final AnswerEntity answerToSave = AnswerEntity.builder()
+                .text(answerRequest.getText())
+                .rating(0)
+                .createdAt(Instant.now())
+                .user(USER_MAPPER.toEntity(currentUser))
+                .question(QUESTION_MAPPER.toEntity(foundQuestion))
+                .build();
 
-            return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(answerToSave));
+        return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(answerToSave));
     }
 
     @Override
@@ -73,14 +73,13 @@ public class AnswerServiceImpl implements AnswerService {
 
         final AnswerEntity foundAnswer = searchAnswer(id);
 
-        if (hasAccess(foundAnswer.getUser().getId(), currentUser.getId())) {
-
-            foundAnswer.setText(answerUpdateRequest.getText());
-            foundAnswer.setUpdatedAt(Instant.now());
-
-            return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(foundAnswer));
+        if (!hasAccess(foundAnswer.getUser().getId(), currentUser.getId())) {
+            throw new AccessDeniedException("Low access to update answer");
         }
-        throw new AccessDeniedException("Low access to update answer");
+        foundAnswer.setText(answerUpdateRequest.getText());
+        foundAnswer.setUpdatedAt(Instant.now());
+
+        return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(foundAnswer));
     }
 
     private void checkAnswerText(final AnswerRequest answerRequest) {
