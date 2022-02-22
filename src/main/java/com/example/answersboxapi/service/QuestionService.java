@@ -24,4 +24,6 @@ public interface QuestionService {
     Question removeTagFromQuestion(final UUID questionId, final UUID tagId);
 
     Question updateById(final UUID id, final QuestionUpdateRequest questionUpdateRequest);
+
+    void deleteById(final UUID id);
 }

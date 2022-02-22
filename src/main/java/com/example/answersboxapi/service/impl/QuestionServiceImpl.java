@@ -51,6 +51,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @Transactional
     public Question create(final QuestionRequest questionRequest) {
         final User currentUser = userService.getCurrent();
 
@@ -73,17 +74,20 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Question getById(final UUID id) {
         return QUESTION_MAPPER.toModel(questionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(String.format("Question with id: %s not found", id))));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds) {
         return questionRepository.findAll(toPageRequest(page, size), tagIds, isAdmin()).map(QUESTION_MAPPER::toModel);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Answer> getAnswersByQuestionId(final UUID questionId) {
         return answerService.getByQuestionId(questionId);
     }
@@ -121,6 +125,7 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @Transactional
     public Question updateById(final UUID id, final QuestionUpdateRequest questionUpdateRequest) {
         final User currentUser = userService.getCurrent();
 
@@ -138,6 +143,23 @@ public class QuestionServiceImpl implements QuestionService {
         return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(foundQuestion));
     }
 
+    @Override
+    @Transactional
+    public void deleteById(final UUID id) {
+        final User currentUser = userService.getCurrent();
+
+        final QuestionEntity foundQuestion = QUESTION_MAPPER.toEntity(getById(id));
+
+        if (!hasAccess(foundQuestion.getUser().getId(), currentUser.getId())) {
+            throw new AccessDeniedException("Low access to delete question");
+        }
+
+        if (answersExistById(foundQuestion.getId())) {
+            answerService.deleteByQuestionId(foundQuestion.getId());
+        }
+        questionRepository.deleteById(id);
+    }
+
     private void checkQuestionFields(final String title, final String description) {
         if (title.isEmpty() || description.isEmpty()) {
             throw new InvalidInputDataException("Empty title or description");
@@ -146,5 +168,9 @@ public class QuestionServiceImpl implements QuestionService {
 
     private boolean tagExistsById(final UUID id) {
         return tagService.existsById(id);
+    }
+
+    private boolean answersExistById(final UUID questionId) {
+        return answerService.existsByQuestionId(questionId);
     }
 }

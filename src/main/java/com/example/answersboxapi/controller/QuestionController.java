@@ -68,4 +68,10 @@ public class QuestionController {
         return new ResponseEntity<>(questionService.updateById(id, questionUpdateRequest), HttpStatus.OK);
     }
 
+    @DeleteMapping("/{id}")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "delete by question id")
+    public ResponseEntity<Void> deleteById(@PathVariable final UUID id) {
+        questionService.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

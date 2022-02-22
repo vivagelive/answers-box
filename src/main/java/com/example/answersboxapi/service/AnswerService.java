@@ -14,4 +14,8 @@ public interface AnswerService {
     List<Answer> getByQuestionId(final UUID questionId);
 
     Answer updateById(final UUID id, final AnswerUpdateRequest answerUpdateRequest);
+
+    void deleteByQuestionId(final UUID questionId);
+
+    boolean existsByQuestionId(final UUID questionId);
 }

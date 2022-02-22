@@ -82,6 +82,18 @@ public class AnswerServiceImpl implements AnswerService {
         return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(foundAnswer));
     }
 
+    @Override
+    @Transactional
+    public void deleteByQuestionId(final UUID questionId) {
+        answerRepository.deleteByQuestionId(questionId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByQuestionId(final UUID questionId) {
+        return answerRepository.existsByQuestionId(questionId);
+    }
+
     private void checkAnswerText(final AnswerRequest answerRequest) {
         if (answerRequest.getText().isEmpty()) {
             throw new InvalidInputDataException("Empty answer");
