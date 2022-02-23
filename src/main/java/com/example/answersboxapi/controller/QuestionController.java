@@ -46,7 +46,7 @@ public class QuestionController {
 
     @GetMapping("/{id}/answers")
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "get answers by id")
-    public ResponseEntity<List<Answer>> getByQuestionId(@PathVariable final UUID id) {
+    public ResponseEntity<List<Answer>> getAnswersByQuestionId(@PathVariable final UUID id) {
         return new ResponseEntity<>(questionService.getAnswersByQuestionId(id), HttpStatus.OK);
     }
 
@@ -68,4 +68,10 @@ public class QuestionController {
         return new ResponseEntity<>(questionService.updateById(id, questionUpdateRequest), HttpStatus.OK);
     }
 
+    @DeleteMapping("/{id}")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "delete by question id")
+    public ResponseEntity<Void> deleteById(@PathVariable final UUID id) {
+        questionService.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

@@ -62,8 +62,8 @@ public class AnswerServiceImpl implements AnswerService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Answer> getByQuestionId(final UUID questionId) {
-        return ANSWER_MAPPER.toModelList(answerRepository.findByQuestionId(questionId, isAdmin()));
+    public List<Answer> getAllByQuestionId(final UUID questionId) {
+        return ANSWER_MAPPER.toModelList(answerRepository.findAllByQuestionId(questionId, isAdmin()));
     }
 
     @Override
@@ -80,6 +80,18 @@ public class AnswerServiceImpl implements AnswerService {
         foundAnswer.setUpdatedAt(Instant.now());
 
         return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(foundAnswer));
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllByQuestionId(final UUID questionId) {
+        answerRepository.deleteAllByQuestionId(questionId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByQuestionId(final UUID questionId) {
+        return answerRepository.existsByQuestionId(questionId);
     }
 
     private void checkAnswerText(final AnswerRequest answerRequest) {

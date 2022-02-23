@@ -17,11 +17,13 @@ public interface QuestionService {
 
     Page<Question> getAll(final int page, final int size, final List<UUID> tagIds);
 
-    List<Answer> getAnswersByQuestionId(final UUID questionId);
+    List<Answer> getAnswersByQuestionId(final UUID id);
 
     Question addTagToQuestion(final UUID questionId, final UUID tagId);
 
     Question removeTagFromQuestion(final UUID questionId, final UUID tagId);
 
     Question updateById(final UUID id, final QuestionUpdateRequest questionUpdateRequest);
+
+    void deleteById(final UUID id);
 }
