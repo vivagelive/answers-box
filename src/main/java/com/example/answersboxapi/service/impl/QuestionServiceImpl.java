@@ -88,7 +88,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Answer> getAllAnswersById(final UUID id) {
+    public List<Answer> getAnswersByQuestionId(final UUID id) {
         return answerService.getAllByQuestionId(id);
     }
 
