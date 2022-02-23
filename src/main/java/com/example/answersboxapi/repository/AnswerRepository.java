@@ -17,13 +17,13 @@ public interface AnswerRepository extends JpaRepository<AnswerEntity, UUID> {
             "FROM answer " +
             "WHERE question_id = :questionId " +
             "AND (:isAdmin = true OR deleted_at IS NULL);", nativeQuery = true)
-    List<AnswerEntity> findByQuestionId(@Param("questionId") final UUID questionId, @Param("isAdmin") final boolean isAdmin);
+    List<AnswerEntity> findAllByQuestionId(@Param("questionId") final UUID questionId, @Param("isAdmin") final boolean isAdmin);
 
     @Modifying
     @Query(value = "UPDATE answer " +
             "SET deleted_at = NOW() " +
             "WHERE question_id = :questionId", nativeQuery = true)
-    void deleteByQuestionId(@Param("questionId") final UUID questionId);
+    void deleteAllByQuestionId(@Param("questionId") final UUID questionId);
 
     @Query(value = "SELECT EXISTS(" +
             "SELECT * " +

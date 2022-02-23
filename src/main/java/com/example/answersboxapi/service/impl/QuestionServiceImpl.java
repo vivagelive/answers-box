@@ -88,8 +88,8 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Answer> getAnswersByQuestionId(final UUID questionId) {
-        return answerService.getByQuestionId(questionId);
+    public List<Answer> getAllAnswersById(final UUID id) {
+        return answerService.getAllByQuestionId(id);
     }
 
     @Override
@@ -154,8 +154,8 @@ public class QuestionServiceImpl implements QuestionService {
             throw new AccessDeniedException("Low access to delete question");
         }
 
-        if (answersExistById(foundQuestion.getId())) {
-            answerService.deleteByQuestionId(foundQuestion.getId());
+        if (answerService.existsByQuestionId(foundQuestion.getId())) {
+            answerService.deleteAllByQuestionId(foundQuestion.getId());
         }
         questionRepository.deleteById(id);
     }
@@ -168,9 +168,5 @@ public class QuestionServiceImpl implements QuestionService {
 
     private boolean tagExistsById(final UUID id) {
         return tagService.existsById(id);
-    }
-
-    private boolean answersExistById(final UUID questionId) {
-        return answerService.existsByQuestionId(questionId);
     }
 }

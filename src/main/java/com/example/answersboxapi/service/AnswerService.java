@@ -11,11 +11,11 @@ public interface AnswerService {
 
     Answer create(final AnswerRequest answerRequest);
 
-    List<Answer> getByQuestionId(final UUID questionId);
+    List<Answer> getAllByQuestionId(final UUID questionId);
 
     Answer updateById(final UUID id, final AnswerUpdateRequest answerUpdateRequest);
 
-    void deleteByQuestionId(final UUID questionId);
+    void deleteAllByQuestionId(final UUID questionId);
 
     boolean existsByQuestionId(final UUID questionId);
 }

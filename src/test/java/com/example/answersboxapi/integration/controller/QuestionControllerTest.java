@@ -1,5 +1,6 @@
 package com.example.answersboxapi.integration.controller;
 
+import com.example.answersboxapi.entity.AnswerEntity;
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
@@ -547,14 +548,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
                         .andExpect(status().isNoContent())
                         .andReturn();
 
-        final MvcResult getAnswersAfterDeleteQuestion = mockMvc.perform(get(QUESTION_URL + "/{id}/answers", savedQuestion.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        final List<Answer> foundAnswers =
-                objectMapper.readValue(getAnswersAfterDeleteQuestion.getResponse().getContentAsByteArray(), new TypeReference<>() {});
+        final List<AnswerEntity> foundAnswers = answerRepository.findAllByQuestionId(savedQuestion.getId(), false);
 
         //then
         assertEquals(0, foundAnswers.size());
