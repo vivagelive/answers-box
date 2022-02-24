@@ -20,8 +20,7 @@ import static com.example.answersboxapi.utils.GeneratorUtil.*;
 import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertAnswerFieldsEquals;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class AnswerControllerTest extends AbstractIntegrationTest {
@@ -262,11 +261,122 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final AnswerUpdateRequest updateAnswerRequest = generateAnswerUpdateRequest();
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "{id}", savedAnswer.getId())
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}", savedAnswer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateAnswerRequest)));
 
         //then
         result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void deleteById_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        //when
+        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", savedAnswer.getId())
+                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void delete_whenNotSignedIn() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        //when
+        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", savedAnswer.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void delete_whenAnswerNotFound() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        final UUID notExistingId = UUID.randomUUID();
+
+        //when
+        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", notExistingId)
+                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void delete_whenUserNotCreatorOfAnswer() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse answerCreatorToken = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(answerCreatorToken, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), answerCreatorToken);
+
+        final SignUpRequest userRequest = generateSignUpRequest();
+        insertUser(userRequest);
+
+        final TokenResponse userToken = createSignIn(userRequest);
+
+        //when
+        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", savedAnswer.getId())
+                .header(AUTHORIZATION, TOKEN_PREFIX + userToken.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void delete_withAdminAccess() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        final SignUpRequest adminsRequest = generateSignUpRequest();
+        insertAdmin(adminsRequest);
+
+        final TokenResponse adminsToken = createSignIn(adminsRequest);
+
+        //when
+        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", savedAnswer.getId())
+                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isNoContent());
     }
 }

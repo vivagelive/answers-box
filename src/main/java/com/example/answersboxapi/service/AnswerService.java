@@ -18,4 +18,6 @@ public interface AnswerService {
     void deleteAllByQuestionId(final UUID questionId);
 
     boolean existsByQuestionId(final UUID questionId);
+
+    void deleteById(final UUID id);
 }

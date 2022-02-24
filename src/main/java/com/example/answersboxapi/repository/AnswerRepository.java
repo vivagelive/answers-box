@@ -31,4 +31,11 @@ public interface AnswerRepository extends JpaRepository<AnswerEntity, UUID> {
             "WHERE question_id = :questionId " +
             "AND deleted_at IS NULL)", nativeQuery = true)
     boolean existsByQuestionId(final UUID questionId);
+
+    @Modifying
+    @Query(value = "UPDATE answer " +
+            "SET deleted_at = NOW() " +
+            "WHERE id = :id " +
+            "AND deleted_at IS NULL", nativeQuery = true)
+    void deleteById(@Param("id") final UUID id);
 }

@@ -94,6 +94,19 @@ public class AnswerServiceImpl implements AnswerService {
         return answerRepository.existsByQuestionId(questionId);
     }
 
+    @Override
+    @Transactional
+    public void deleteById(final UUID id) {
+        final User currentUser = userService.getCurrent();
+
+        final AnswerEntity foundAnswer = searchAnswer(id);
+
+        if (!hasAccess(foundAnswer.getUser().getId(), currentUser.getId())) {
+            throw new AccessDeniedException("Low access to delete answer");
+        }
+        answerRepository.deleteById(id);
+    }
+
     private void checkAnswerText(final AnswerRequest answerRequest) {
         if (answerRequest.getText().isEmpty()) {
             throw new InvalidInputDataException("Empty answer");
