@@ -107,6 +107,31 @@ public class AnswerServiceImpl implements AnswerService {
         answerRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public Answer increaseRating(final UUID id) {
+        final AnswerEntity foundAnswer = searchAnswer(id);
+
+        if (isAdmin()) {
+            throw new AccessDeniedException("Admin can`t increase answer rating");
+        }
+        foundAnswer.setRating(foundAnswer.getRating() + 1);
+
+        return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(foundAnswer));
+    }
+
+    @Override
+    public Answer decreaseRating(final UUID id) {
+        final AnswerEntity foundAnswer = searchAnswer(id);
+
+        if (isAdmin()) {
+            throw new AccessDeniedException("Admin can`t decrease answer rating");
+        }
+        foundAnswer.setRating(foundAnswer.getRating() - 1);
+
+        return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(foundAnswer));
+    }
+
     private void checkAnswerText(final AnswerRequest answerRequest) {
         if (answerRequest.getText().isEmpty()) {
             throw new InvalidInputDataException("Empty answer");

@@ -20,4 +20,8 @@ public interface AnswerService {
     boolean existsByQuestionId(final UUID questionId);
 
     void deleteById(final UUID id);
+
+    Answer increaseRating(final UUID id);
+
+    Answer decreaseRating(final UUID id);
 }
