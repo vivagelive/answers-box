@@ -382,7 +382,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void increaseRating_happyPath() throws Exception {
+    public void increaseRatingById_happyPath() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         insertUser(signUpRequest);
@@ -393,7 +393,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
 
         //when
-        mockMvc.perform(put(ANSWER_URL + "/{id}/increase", savedAnswer.getId())
+        mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", savedAnswer.getId())
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
                         .andExpect(status().isOk())
@@ -402,11 +402,11 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final AnswerEntity foundAnswer = answerRepository.getById(savedAnswer.getId());
 
         //then
-        assertEquals(1, foundAnswer.getRating());
+        assertEquals(savedAnswer.getRating() + 1, foundAnswer.getRating());
     }
 
     @Test
-    public void increaseRating_whenNotSignedIn() throws Exception {
+    public void increaseRatingById_whenNotSignedIn() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         insertUser(signUpRequest);
@@ -417,7 +417,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase", savedAnswer.getId())
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", savedAnswer.getId())
                 .contentType(MediaType.APPLICATION_JSON));
 
         //then
@@ -425,7 +425,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void increase_whenAnswerNotFound() throws Exception {
+    public void increaseRatingById_whenAnswerNotFound() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         insertUser(signUpRequest);
@@ -437,7 +437,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final UUID notExistingId = UUID.randomUUID();
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase", notExistingId)
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", notExistingId)
                 .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON));
 
@@ -446,7 +446,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void increase_withAdminAccess() throws Exception {
+    public void increaseRatingById_withAdminAccess() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         insertUser(signUpRequest);
@@ -462,7 +462,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final TokenResponse adminsToken = createSignIn(adminRequest);
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase", savedAnswer.getId())
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", savedAnswer.getId())
                 .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON));
 
@@ -471,7 +471,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void decrease_happyPath() throws Exception {
+    public void decreaseRatingById_happyPath() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         insertUser(signUpRequest);
@@ -482,7 +482,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
 
         //when
-        mockMvc.perform(put(ANSWER_URL + "/{id}/decrease", savedAnswer.getId())
+        mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", savedAnswer.getId())
                 .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -491,11 +491,11 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final AnswerEntity foundAnswer = answerRepository.getById(savedAnswer.getId());
 
         //then
-        assertEquals(-1, foundAnswer.getRating());
+        assertEquals(savedAnswer.getRating() - 1, foundAnswer.getRating());
     }
 
     @Test
-    public void decrease_whenNotSignedIn() throws Exception {
+    public void decreaseRatingById_whenNotSignedIn() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         insertUser(signUpRequest);
@@ -506,7 +506,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease", savedAnswer.getId())
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", savedAnswer.getId())
                 .contentType(MediaType.APPLICATION_JSON));
 
         //then
@@ -514,7 +514,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void decrease_whenAnswerNotFound() throws Exception {
+    public void decreaseRatingById_whenAnswerNotFound() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         insertUser(signUpRequest);
@@ -527,7 +527,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final UUID notExistingId = UUID.randomUUID();
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease", notExistingId)
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", notExistingId)
                 .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON));
 
@@ -536,7 +536,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void decrease_withAdminAccess() throws Exception {
+    public void decreaseRatingById_withAdminAccess() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         insertUser(signUpRequest);
@@ -552,7 +552,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         final TokenResponse adminsToken = createSignIn(adminsRequest);
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease", savedAnswer.getId())
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", savedAnswer.getId())
                 .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON));
 

@@ -21,7 +21,7 @@ public interface AnswerService {
 
     void deleteById(final UUID id);
 
-    Answer increaseRating(final UUID id);
+    Answer increaseRatingById(final UUID id);
 
-    Answer decreaseRating(final UUID id);
+    Answer decreaseRatingById(final UUID id);
 }

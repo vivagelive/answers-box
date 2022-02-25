@@ -109,25 +109,23 @@ public class AnswerServiceImpl implements AnswerService {
 
     @Override
     @Transactional
-    public Answer increaseRating(final UUID id) {
-        final AnswerEntity foundAnswer = searchAnswer(id);
-
-        if (isAdmin()) {
-            throw new AccessDeniedException("Admin can`t increase answer rating");
-        }
-        foundAnswer.setRating(foundAnswer.getRating() + 1);
-
-        return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(foundAnswer));
+    public Answer increaseRatingById(final UUID id) {
+       return updateRating(id, 1);
     }
 
     @Override
-    public Answer decreaseRating(final UUID id) {
+    @Transactional
+    public Answer decreaseRatingById(final UUID id) {
+      return updateRating(id, -1);
+    }
+
+    private Answer updateRating(final UUID id, final Integer ratingDelta) {
         final AnswerEntity foundAnswer = searchAnswer(id);
 
         if (isAdmin()) {
-            throw new AccessDeniedException("Admin can`t decrease answer rating");
+            throw new AccessDeniedException("Admin can`t update rating");
         }
-        foundAnswer.setRating(foundAnswer.getRating() - 1);
+        foundAnswer.setRating(foundAnswer.getRating() + ratingDelta);
 
         return ANSWER_MAPPER.toModel(answerRepository.saveAndFlush(foundAnswer));
     }
