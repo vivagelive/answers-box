@@ -1,5 +1,6 @@
 package com.example.answersboxapi.integration.controller;
 
+import com.example.answersboxapi.entity.AnswerEntity;
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
@@ -378,5 +379,184 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void increaseRatingById_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        //when
+        mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", savedAnswer.getId())
+                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        final AnswerEntity foundAnswer = answerRepository.getById(savedAnswer.getId());
+
+        //then
+        assertEquals(savedAnswer.getRating() + 1, foundAnswer.getRating());
+    }
+
+    @Test
+    public void increaseRatingById_whenNotSignedIn() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        //when
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", savedAnswer.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void increaseRatingById_whenAnswerNotFound() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        createQuestion(token, generateQuestionRequest());
+
+        final UUID notExistingId = UUID.randomUUID();
+
+        //when
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", notExistingId)
+                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void increaseRatingById_withAdminAccess() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        final SignUpRequest adminRequest = generateSignUpRequest();
+        insertAdmin(adminRequest);
+
+        final TokenResponse adminsToken = createSignIn(adminRequest);
+
+        //when
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", savedAnswer.getId())
+                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void decreaseRatingById_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        //when
+        mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", savedAnswer.getId())
+                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        final AnswerEntity foundAnswer = answerRepository.getById(savedAnswer.getId());
+
+        //then
+        assertEquals(savedAnswer.getRating() - 1, foundAnswer.getRating());
+    }
+
+    @Test
+    public void decreaseRatingById_whenNotSignedIn() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        //when
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", savedAnswer.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void decreaseRatingById_whenAnswerNotFound() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        final UUID notExistingId = UUID.randomUUID();
+
+        //when
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", notExistingId)
+                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void decreaseRatingById_withAdminAccess() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+
+        final SignUpRequest adminsRequest = generateSignUpRequest();
+        insertAdmin(adminsRequest);
+
+        final TokenResponse adminsToken = createSignIn(adminsRequest);
+
+        //when
+        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", savedAnswer.getId())
+                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isForbidden());
     }
 }
