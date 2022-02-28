@@ -1,6 +1,7 @@
 package com.example.answersboxapi.integration.controller;
 
 import com.example.answersboxapi.entity.AnswerEntity;
+import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
@@ -631,5 +632,86 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void increaseRatingById_happyPath() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        //when
+        mockMvc.perform(put(QUESTION_URL + "/{id}/increase-rating", savedQuestion.getId())
+                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        final QuestionEntity foundQuestion = questionRepository.getById(savedQuestion.getId());
+
+        //then
+        assertEquals(savedQuestion.getRating() + 1, foundQuestion.getRating());
+    }
+
+    @Test
+    public void increaseRating_whenQuestionNotFound() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        createQuestion(token, generateQuestionRequest());
+
+        final UUID notExistingId = UUID.randomUUID();
+
+        //when
+        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}/increase-rating", notExistingId)
+                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void increaseRating_whenNotSignedIn() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        //when
+        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}/increase-rating", savedQuestion.getId())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void increaseRating_withAdminAccess() throws Exception {
+        //given
+        final SignUpRequest signUpRequest = generateSignUpRequest();
+        insertUser(signUpRequest);
+        final TokenResponse token = createSignIn(signUpRequest);
+
+        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
+
+        final SignUpRequest adminsRequest = generateSignUpRequest();
+        insertAdmin(adminsRequest);
+        final TokenResponse adminsToken = createSignIn(adminsRequest);
+
+        //when
+        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}/increase-rating", savedQuestion.getId())
+                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
+                .contentType(MediaType.APPLICATION_JSON));
+
+        //then
+        result.andExpect(status().isForbidden());
     }
 }
