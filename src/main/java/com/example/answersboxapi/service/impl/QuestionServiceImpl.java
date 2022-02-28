@@ -163,16 +163,16 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional
     public Question increaseRatingById(final UUID id) {
-        return updateRating(id, 1);
+        return updateRatingById(id, 1);
     }
 
     @Override
     @Transactional
     public Question decreaseRatingById(final UUID id) {
-        return updateRating(id, -1);
+        return updateRatingById(id, -1);
     }
 
-    private Question updateRating(final UUID id, final Integer ratingDelta) {
+    private Question updateRatingById(final UUID id, final Integer ratingDelta) {
         final QuestionEntity foundQuestion = QUESTION_MAPPER.toEntity(getById(id));
 
         if (isAdmin()) {
