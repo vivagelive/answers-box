@@ -160,6 +160,29 @@ public class QuestionServiceImpl implements QuestionService {
         questionRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional
+    public Question increaseRatingById(final UUID id) {
+        return updateRatingById(id, 1);
+    }
+
+    @Override
+    @Transactional
+    public Question decreaseRatingById(final UUID id) {
+        return updateRatingById(id, -1);
+    }
+
+    private Question updateRatingById(final UUID id, final Integer ratingDelta) {
+        final QuestionEntity foundQuestion = QUESTION_MAPPER.toEntity(getById(id));
+
+        if (isAdmin()) {
+            throw new AccessDeniedException("Admin can`t upgrade question rating");
+        }
+        foundQuestion.setRating(foundQuestion.getRating() + ratingDelta);
+
+        return QUESTION_MAPPER.toModel(questionRepository.saveAndFlush(foundQuestion));
+    }
+
     private void checkQuestionFields(final String title, final String description) {
         if (title.isEmpty() || description.isEmpty()) {
             throw new InvalidInputDataException("Empty title or description");

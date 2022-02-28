@@ -74,4 +74,16 @@ public class QuestionController {
         questionService.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @PutMapping("/{id}/increase-rating")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "increase question rating")
+    public ResponseEntity<Question> increaseRating(@PathVariable final UUID id) {
+        return new ResponseEntity<>(questionService.increaseRatingById(id), HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}/decrease-rating")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "decrease question rating")
+    public ResponseEntity<Question> decreaseRating(@PathVariable final UUID id) {
+        return new ResponseEntity<>(questionService.decreaseRatingById(id), HttpStatus.OK);
+    }
 }

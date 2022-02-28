@@ -26,4 +26,8 @@ public interface QuestionService {
     Question updateById(final UUID id, final QuestionUpdateRequest questionUpdateRequest);
 
     void deleteById(final UUID id);
+
+    Question increaseRatingById(final UUID id);
+
+    Question decreaseRatingById(final UUID id);
 }
