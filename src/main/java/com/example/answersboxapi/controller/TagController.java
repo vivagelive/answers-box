@@ -9,10 +9,9 @@ import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,5 +24,12 @@ public class TagController {
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "create")
     public ResponseEntity<Tag> create(@RequestBody final TagRequest tagRequest) {
         return new ResponseEntity<>(tagService.create(tagRequest), HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/{id}")
+    @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "delete tag")
+    public ResponseEntity<Tag> deleteTagById(@PathVariable final UUID id) {
+        tagService.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
