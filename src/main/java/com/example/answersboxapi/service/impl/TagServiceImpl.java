@@ -50,6 +50,16 @@ public class TagServiceImpl implements TagService {
         return true;
     }
 
+    @Override
+    public void deleteById(final UUID id) {
+        getById(id);
+
+        if (!isAdmin()) {
+            throw new AccessDeniedException("User can`t delete tag");
+        }
+        tagRepository.deleteById(id);
+    }
+
     private boolean existsByName(final String name) {
         if (tagRepository.existsByName(name)) {
             throw new EntityAlreadyProcessedException(String.format("Tag: %s already exist", name));

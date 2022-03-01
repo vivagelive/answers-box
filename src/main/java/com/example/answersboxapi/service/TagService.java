@@ -12,4 +12,6 @@ public interface TagService {
     Tag getById(final UUID id);
 
     boolean existsById(final UUID id);
+
+    void deleteById(final UUID id);
 }
