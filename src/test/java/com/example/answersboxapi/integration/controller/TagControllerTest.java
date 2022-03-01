@@ -121,7 +121,7 @@ public class TagControllerTest extends AbstractIntegrationTest {
         final MvcResult result = mockMvc.perform(delete(TAG_URL + "/{id}", savedTag.getId())
                 .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
+                .andExpect(status().isNoContent())
                 .andReturn();
 
         final TagEntity foundTag = tagRepository.getById(savedTag.getId());

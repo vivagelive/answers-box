@@ -30,6 +30,6 @@ public class TagController {
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "delete tag")
     public ResponseEntity<Tag> deleteTagById(@PathVariable final UUID id) {
         tagService.deleteById(id);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
