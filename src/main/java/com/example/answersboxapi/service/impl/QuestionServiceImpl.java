@@ -1,5 +1,6 @@
 package com.example.answersboxapi.service.impl;
 
+import com.example.answersboxapi.entity.AnswerEntity;
 import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.EntityNotFoundException;
@@ -13,20 +14,27 @@ import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.service.*;
+import com.example.answersboxapi.utils.sorting.SortingParams;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
+import static com.example.answersboxapi.utils.FilterUtils.createDeletedFlagDefault;
 import static com.example.answersboxapi.utils.SecurityUtils.hasAccess;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
 import static com.example.answersboxapi.utils.pagination.PagingUtils.toPageRequest;
+import static com.example.answersboxapi.utils.sorting.SortingUtils.useSortOrDefault;
 
 @Service
 public class QuestionServiceImpl implements QuestionService {
@@ -82,14 +90,49 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds) {
-        return questionRepository.findAll(toPageRequest(page, size), tagIds, isAdmin()).map(QUESTION_MAPPER::toModel);
+    public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds, final SortingParams sortParams,
+                                 final String searchParam, final boolean isDeleted) {
+        final int allSize = questionRepository.findAll().size();
+
+        final PageRequest pageable = toPageRequest(1, allSize);
+        final boolean deletedFlagOrDefault = createDeletedFlagDefault(isDeleted);
+
+        final List<UUID> preparedQuestionIds =
+                questionRepository.findAll(pageable, tagIds, searchParam, deletedFlagOrDefault)
+                        .stream()
+                        .map(QuestionEntity::getId)
+                        .collect(Collectors.toList());
+
+        if (preparedQuestionIds.isEmpty()) {
+            return Page.empty();
+        }
+        final String sortParam = sortParams.getSortParam();
+        final Sort sort = useSortOrDefault(sortParam, QuestionEntity.class);
+        final Pageable sortedPageable = toPageRequest(page, size, sort);
+
+        return questionRepository.searchByListIds(preparedQuestionIds, sortedPageable).map(QUESTION_MAPPER::toModel);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Answer> getAnswersByQuestionId(final UUID id) {
-        return answerService.getAllByQuestionId(id);
+    public Page<Answer> getAnswersByQuestionId(final UUID id, final SortingParams sortParams, final String searchParam,
+                                               final boolean isDeleted, final int page, final int size) {
+        final int allSize = answerService.getAll().size();
+
+        final PageRequest pageable = toPageRequest(1, allSize);
+        final boolean deletedFlagOrDefault = createDeletedFlagDefault(isDeleted);
+
+        final List<UUID> preparedAnswersIds = answerService.getAllByQuestionId(id, searchParam, deletedFlagOrDefault, pageable);
+
+        if (preparedAnswersIds.isEmpty()) {
+            return Page.empty();
+        }
+
+        final String sortParam = sortParams.getSortParam();
+        final Sort sort = useSortOrDefault(sortParam, AnswerEntity.class);
+        final Pageable sortedPageable = toPageRequest(page, size, sort);
+
+        return answerService.searchByListIds(preparedAnswersIds, sortedPageable);
     }
 
     @Override

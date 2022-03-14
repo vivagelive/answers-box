@@ -8,4 +8,8 @@ public class PagingUtils {
     public static PageRequest toPageRequest(final int page, final int size) {
         return PageRequest.of(page - 1, size, Sort.unsorted());
     }
+
+    public static PageRequest toPageRequest(final int page, final int size, final Sort sort) {
+        return PageRequest.of(page -1, size, sort);
+    }
 }

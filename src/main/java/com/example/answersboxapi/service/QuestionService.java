@@ -4,6 +4,7 @@ import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.question.QuestionUpdateRequest;
+import com.example.answersboxapi.utils.sorting.SortingParams;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -15,9 +16,11 @@ public interface QuestionService {
 
     Question getById(final UUID id);
 
-    Page<Question> getAll(final int page, final int size, final List<UUID> tagIds);
+    Page<Question> getAll(final int page, final int size, final List<UUID> tagIds, final SortingParams sortParams,
+                          final String searchParam, final boolean isDeleted);
 
-    List<Answer> getAnswersByQuestionId(final UUID id);
+    Page<Answer> getAnswersByQuestionId(final UUID id, final SortingParams sortParams,
+                                        final String searchParam, final boolean isDeleted, final int page, final int size);
 
     Question addTagToQuestion(final UUID questionId, final UUID tagId);
 

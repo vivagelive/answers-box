@@ -14,12 +14,15 @@ import com.example.answersboxapi.service.AnswerService;
 import com.example.answersboxapi.service.QuestionService;
 import com.example.answersboxapi.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
@@ -62,8 +65,12 @@ public class AnswerServiceImpl implements AnswerService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Answer> getAllByQuestionId(final UUID questionId) {
-        return ANSWER_MAPPER.toModelList(answerRepository.findAllByQuestionId(questionId, isAdmin()));
+    public List<UUID> getAllByQuestionId(final UUID questionId, final String searchParam,
+                                         final boolean deletedFlag, final Pageable pageable) {
+        final List<Answer> foundAnswers =
+                ANSWER_MAPPER.toModelList(answerRepository.findAllByQuestionId(questionId, searchParam, deletedFlag));
+
+        return foundAnswers.stream().map(Answer::getId).collect(Collectors.toList());
     }
 
     @Override
@@ -117,6 +124,16 @@ public class AnswerServiceImpl implements AnswerService {
     @Transactional
     public Answer decreaseRatingById(final UUID id) {
       return updateRating(id, -1);
+    }
+
+    @Override
+    public List<Answer> getAll() {
+        return ANSWER_MAPPER.toModelList(answerRepository.findAll());
+    }
+
+    @Override
+    public Page<Answer> searchByListIds(final List<UUID> ids, final Pageable pageable) {
+       return answerRepository.searchByListIds(ids, pageable).map(ANSWER_MAPPER::toModel);
     }
 
     private Answer updateRating(final UUID id, final Integer ratingDelta) {
