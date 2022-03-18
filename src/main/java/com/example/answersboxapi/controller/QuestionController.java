@@ -6,7 +6,7 @@ import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.question.QuestionUpdateRequest;
 import com.example.answersboxapi.service.QuestionService;
-import com.example.answersboxapi.utils.sorting.SortingParams;
+import com.example.answersboxapi.model.SortParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
@@ -39,9 +39,9 @@ public class QuestionController {
     public ResponseEntity<List<Question>> getAll(@RequestParam(defaultValue = "1") final int page,
                                                  @RequestParam(defaultValue = "10") final int size,
                                                  @RequestParam final List<UUID> tagIds,
-                                                 @RequestParam final SortingParams sortParams,
-                                                 final String searchParam,
-                                                 final boolean isDeleted) {
+                                                 @RequestParam(defaultValue = "-createdAt") final SortParams sortParams,
+                                                 @RequestParam(defaultValue = "", required = false) final String searchParam,
+                                                 @RequestParam(required = false, defaultValue = "false") final Boolean isDeleted) {
         final Page<Question> foundQuestions = questionService.getAll(page, size, tagIds, sortParams, searchParam, isDeleted);
         final MultiValueMap<String, String> headers = generateHeaders(foundQuestions);
 
@@ -51,13 +51,14 @@ public class QuestionController {
     @GetMapping("/{id}/answers")
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "get answers by id")
     public ResponseEntity<List<Answer>> getAnswersByQuestionId(@PathVariable final UUID id,
-                                                               @RequestParam final SortingParams sortParams,
                                                                @RequestParam(defaultValue = "1") final int page,
                                                                @RequestParam(defaultValue = "10") final int size,
-                                                               final String searchParam,
-                                                               final boolean isDeleted) {
-        final Page<Answer> answers = questionService.getAnswersByQuestionId(id, sortParams, searchParam, isDeleted, page, size);
+                                                               @RequestParam(defaultValue = "-createdAt") final SortParams sortParams,
+                                                               @RequestParam(defaultValue = "", required = false) final String searchParam,
+                                                               @RequestParam(defaultValue = "false", required = false) final Boolean isDeleted) {
+        final Page<Answer> answers = questionService.getAnswersByQuestionId(id, page, size, sortParams, searchParam, isDeleted);
         final MultiValueMap<String, String> headers = generateHeaders(answers);
+
         return new ResponseEntity<>(answers.getContent(), headers, HttpStatus.OK);
     }
 

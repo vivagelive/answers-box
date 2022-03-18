@@ -2,9 +2,11 @@ package com.example.answersboxapi.service.impl;
 
 import com.example.answersboxapi.entity.AnswerEntity;
 import com.example.answersboxapi.entity.QuestionEntity;
+import com.example.answersboxapi.entity.TagEntity;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.InvalidInputDataException;
+import com.example.answersboxapi.model.SortParams;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionDetails;
@@ -14,10 +16,8 @@ import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.service.*;
-import com.example.answersboxapi.utils.sorting.SortingParams;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
+import static com.example.answersboxapi.mapper.TagMapper.TAG_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.FilterUtils.createDeletedFlagDefault;
 import static com.example.answersboxapi.utils.SecurityUtils.hasAccess;
@@ -90,49 +91,35 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds, final SortingParams sortParams,
-                                 final String searchParam, final boolean isDeleted) {
-        final int allSize = questionRepository.findAll().size();
+    public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds, final SortParams sortParams,
+                                 final String searchParam, final Boolean isDeleted) {
 
-        final PageRequest pageable = toPageRequest(1, allSize);
+        final List<TagEntity> foundTags = tagIds.stream()
+                .map(tagId -> TAG_MAPPER.toEntity(tagService.getById(tagId)))
+                .collect(Collectors.toList());
+
         final boolean deletedFlagOrDefault = createDeletedFlagDefault(isDeleted);
 
-        final List<UUID> preparedQuestionIds =
-                questionRepository.findAll(pageable, tagIds, searchParam, deletedFlagOrDefault)
-                        .stream()
-                        .map(QuestionEntity::getId)
-                        .collect(Collectors.toList());
-
-        if (preparedQuestionIds.isEmpty()) {
-            return Page.empty();
-        }
         final String sortParam = sortParams.getSortParam();
         final Sort sort = useSortOrDefault(sortParam, QuestionEntity.class);
-        final Pageable sortedPageable = toPageRequest(page, size, sort);
+        final Pageable pageable = toPageRequest(page, size, sort);
 
-        return questionRepository.searchByListIds(preparedQuestionIds, sortedPageable).map(QUESTION_MAPPER::toModel);
+        return questionRepository.findAll(pageable, foundTags, searchParam, deletedFlagOrDefault).map(QUESTION_MAPPER::toModel);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Answer> getAnswersByQuestionId(final UUID id, final SortingParams sortParams, final String searchParam,
-                                               final boolean isDeleted, final int page, final int size) {
-        final int allSize = answerService.getAll().size();
-
-        final PageRequest pageable = toPageRequest(1, allSize);
-        final boolean deletedFlagOrDefault = createDeletedFlagDefault(isDeleted);
-
-        final List<UUID> preparedAnswersIds = answerService.getAllByQuestionId(id, searchParam, deletedFlagOrDefault, pageable);
-
-        if (preparedAnswersIds.isEmpty()) {
-            return Page.empty();
-        }
+    public Page<Answer> getAnswersByQuestionId(final UUID id, final int page, final int size,
+                                               final SortParams sortParams, final String searchParam,
+                                               final Boolean isDeleted) {
 
         final String sortParam = sortParams.getSortParam();
         final Sort sort = useSortOrDefault(sortParam, AnswerEntity.class);
-        final Pageable sortedPageable = toPageRequest(page, size, sort);
+        final Pageable pageable = toPageRequest(page, size, sort);
 
-        return answerService.searchByListIds(preparedAnswersIds, sortedPageable);
+        final boolean deletedFlagOrDefault = createDeletedFlagDefault(isDeleted);
+
+        return answerService.getAllByQuestionId(id, searchParam, deletedFlagOrDefault, pageable);
     }
 
     @Override

@@ -20,16 +20,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.SecurityUtils.hasAccess;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
-import static java.lang.String.*;
+import static java.lang.String.format;
 
 @Service
 @RequiredArgsConstructor
@@ -65,12 +63,10 @@ public class AnswerServiceImpl implements AnswerService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UUID> getAllByQuestionId(final UUID questionId, final String searchParam,
-                                         final boolean deletedFlag, final Pageable pageable) {
-        final List<Answer> foundAnswers =
-                ANSWER_MAPPER.toModelList(answerRepository.findAllByQuestionId(questionId, searchParam, deletedFlag));
+    public Page<Answer> getAllByQuestionId(final UUID questionId, final String searchParam,
+                                           final boolean deletedFlag, final Pageable pageable) {
 
-        return foundAnswers.stream().map(Answer::getId).collect(Collectors.toList());
+        return answerRepository.findAllByQuestionId(questionId, searchParam, deletedFlag, pageable).map(ANSWER_MAPPER::toModel);
     }
 
     @Override
@@ -117,23 +113,13 @@ public class AnswerServiceImpl implements AnswerService {
     @Override
     @Transactional
     public Answer increaseRatingById(final UUID id) {
-       return updateRating(id, 1);
+        return updateRating(id, 1);
     }
 
     @Override
     @Transactional
     public Answer decreaseRatingById(final UUID id) {
-      return updateRating(id, -1);
-    }
-
-    @Override
-    public List<Answer> getAll() {
-        return ANSWER_MAPPER.toModelList(answerRepository.findAll());
-    }
-
-    @Override
-    public Page<Answer> searchByListIds(final List<UUID> ids, final Pageable pageable) {
-       return answerRepository.searchByListIds(ids, pageable).map(ANSWER_MAPPER::toModel);
+        return updateRating(id, -1);
     }
 
     private Answer updateRating(final UUID id, final Integer ratingDelta) {

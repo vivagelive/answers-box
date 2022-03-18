@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -19,11 +18,12 @@ public interface AnswerRepository extends JpaRepository<AnswerEntity, UUID> {
             "FROM AnswerEntity answer " +
             "WHERE (answer.question.id = :questionId " +
             "AND answer.text LIKE %:searchParam%) " +
-            "AND (:deletedFlag IS NULL OR :deletedFlag = TRUE " +
+            "AND (:deletedFlag IS NULL OR :deletedFlag = TRUE AND answer.deletedAt IS NOT NULL " +
             "      OR :deletedFlag = FALSE AND answer.deletedAt IS NULL) ")
-    List<AnswerEntity> findAllByQuestionId(@Param("questionId") final UUID questionId,
+    Page<AnswerEntity> findAllByQuestionId(@Param("questionId") final UUID questionId,
                                            @Param("searchParam") final String searchParam,
-                                           @Param("deletedFlag") final boolean deletedFlag);
+                                           @Param("deletedFlag") final boolean deletedFlag,
+                                           final Pageable pageable);
 
     @Modifying
     @Query(value = "UPDATE answer " +
@@ -44,9 +44,4 @@ public interface AnswerRepository extends JpaRepository<AnswerEntity, UUID> {
             "WHERE id = :id " +
             "AND deleted_at IS NULL", nativeQuery = true)
     void deleteById(@Param("id") final UUID id);
-
-    @Query(value = "SELECT answer " +
-            "FROM AnswerEntity answer " +
-            "WHERE answer.id IN :ids")
-    Page<AnswerEntity> searchByListIds(@Param("ids") final List<UUID> ids, final Pageable pageable);
 }

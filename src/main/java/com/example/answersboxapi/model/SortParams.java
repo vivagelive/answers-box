@@ -1,7 +1,6 @@
-package com.example.answersboxapi.utils.sorting;
+package com.example.answersboxapi.model;
 
-public enum SortingParams {
-    DEFAULT("default"),
+public enum SortParams {
     CREATED_UP("+createdAt"), CREATED_DOWN("-createdAt"),
     UPDATED_UP("+updatedAt"), UPDATE_DOWN("-updatedAt"),
     RATING_UP("+rating"), RATING_DOWN("-rating"),
@@ -9,10 +8,11 @@ public enum SortingParams {
 
     private String sortParam;
 
-    SortingParams(String direction) {
+    SortParams(String direction) {
         this.sortParam = direction;
     }
-     public String getSortParam() {
+
+    public String getSortParam() {
         return sortParam;
-     }
+    }
 }
