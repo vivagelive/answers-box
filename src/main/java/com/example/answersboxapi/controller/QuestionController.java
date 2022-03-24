@@ -1,6 +1,7 @@
 package com.example.answersboxapi.controller;
 
 import com.example.answersboxapi.config.SwaggerConfig;
+import com.example.answersboxapi.model.SortParams;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
@@ -37,8 +38,11 @@ public class QuestionController {
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "getAll")
     public ResponseEntity<List<Question>> getAll(@RequestParam(defaultValue = "1") final int page,
                                                  @RequestParam(defaultValue = "10") final int size,
-                                                 @RequestParam final List<UUID> tagIds) {
-        final Page<Question> foundQuestions = questionService.getAll(page, size, tagIds);
+                                                 @RequestParam final List<UUID> tagIds,
+                                                 @RequestParam(defaultValue = "CREATED_DOWN") final SortParams sortParams,
+                                                 @RequestParam(defaultValue = "", required = false) final String searchParam,
+                                                 @RequestParam(required = false, defaultValue = "false") final Boolean isDeleted) {
+        final Page<Question> foundQuestions = questionService.getAll(page, size, tagIds, sortParams, searchParam, isDeleted);
         final MultiValueMap<String, String> headers = generateHeaders(foundQuestions);
 
         return new ResponseEntity<>(foundQuestions.getContent(), headers, HttpStatus.OK);
@@ -46,8 +50,16 @@ public class QuestionController {
 
     @GetMapping("/{id}/answers")
     @ApiOperation(authorizations = @Authorization(value = SwaggerConfig.AUTH), value = "get answers by id")
-    public ResponseEntity<List<Answer>> getAnswersByQuestionId(@PathVariable final UUID id) {
-        return new ResponseEntity<>(questionService.getAnswersByQuestionId(id), HttpStatus.OK);
+    public ResponseEntity<List<Answer>> getAnswersByQuestionId(@PathVariable final UUID id,
+                                                               @RequestParam(defaultValue = "1") final int page,
+                                                               @RequestParam(defaultValue = "10") final int size,
+                                                               @RequestParam(defaultValue = "CREATED_DOWN") final SortParams sortParams,
+                                                               @RequestParam(defaultValue = "", required = false) final String searchParam,
+                                                               @RequestParam(defaultValue = "false", required = false) final Boolean isDeleted) {
+        final Page<Answer> answers = questionService.getAnswersByQuestionId(id, page, size, sortParams, searchParam, isDeleted);
+        final MultiValueMap<String, String> headers = generateHeaders(answers);
+
+        return new ResponseEntity<>(answers.getContent(), headers, HttpStatus.OK);
     }
 
     @PutMapping("/{questionId}/add-tag/{tagId}")

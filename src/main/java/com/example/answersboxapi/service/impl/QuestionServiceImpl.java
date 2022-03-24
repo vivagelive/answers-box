@@ -1,9 +1,12 @@
 package com.example.answersboxapi.service.impl;
 
+import com.example.answersboxapi.entity.AnswerEntity;
 import com.example.answersboxapi.entity.QuestionEntity;
+import com.example.answersboxapi.entity.TagEntity;
 import com.example.answersboxapi.exceptions.AccessDeniedException;
 import com.example.answersboxapi.exceptions.EntityNotFoundException;
 import com.example.answersboxapi.exceptions.InvalidInputDataException;
+import com.example.answersboxapi.model.SortParams;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionDetails;
@@ -15,18 +18,22 @@ import com.example.answersboxapi.repository.QuestionRepository;
 import com.example.answersboxapi.service.*;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
+import static com.example.answersboxapi.mapper.TagMapper.TAG_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
+import static com.example.answersboxapi.utils.FilterUtils.createDeletedFlagDefault;
 import static com.example.answersboxapi.utils.SecurityUtils.hasAccess;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
-import static com.example.answersboxapi.utils.pagination.PagingUtils.toPageRequest;
+import static com.example.answersboxapi.utils.pagination.PagingUtils.createPageableWithSort;
 
 @Service
 public class QuestionServiceImpl implements QuestionService {
@@ -82,14 +89,31 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds) {
-        return questionRepository.findAll(toPageRequest(page, size), tagIds, isAdmin()).map(QUESTION_MAPPER::toModel);
+    public Page<Question> getAll(final int page, final int size, final List<UUID> tagIds, final SortParams sortParams,
+                                 final String searchParam, final Boolean isDeleted) {
+
+        final List<TagEntity> foundTags = tagIds.stream()
+                .map(tagId -> TAG_MAPPER.toEntity(tagService.getById(tagId)))
+                .collect(Collectors.toList());
+
+        final boolean deletedFlagOrDefault = createDeletedFlagDefault(isDeleted);
+
+        final Pageable pageable = createPageableWithSort(page, size, sortParams, QuestionEntity.class);
+
+        return questionRepository.findAll(foundTags, searchParam, deletedFlagOrDefault, pageable).map(QUESTION_MAPPER::toModel);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Answer> getAnswersByQuestionId(final UUID id) {
-        return answerService.getAllByQuestionId(id);
+    public Page<Answer> getAnswersByQuestionId(final UUID id, final int page, final int size,
+                                               final SortParams sortParams, final String searchParam,
+                                               final Boolean isDeleted) {
+
+        final boolean deletedFlagOrDefault = createDeletedFlagDefault(isDeleted);
+
+        final Pageable pageable = createPageableWithSort(page, size, sortParams, AnswerEntity.class);
+
+        return answerService.getAllByQuestionId(id, searchParam, deletedFlagOrDefault, pageable);
     }
 
     @Override

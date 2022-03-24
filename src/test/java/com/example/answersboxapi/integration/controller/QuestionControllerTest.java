@@ -3,6 +3,7 @@ package com.example.answersboxapi.integration.controller;
 import com.example.answersboxapi.entity.AnswerEntity;
 import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
+import com.example.answersboxapi.model.SortParams;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
@@ -14,17 +15,25 @@ import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.user.User;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import static com.example.answersboxapi.model.SortParams.*;
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
 import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.*;
+import static com.example.answersboxapi.utils.pagination.PagingUtils.toPageRequest;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -97,8 +106,9 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         result.andExpect(status().isBadRequest());
     }
 
-    @Test
-    public void getAll_withUserAccess() throws Exception {
+    @ParameterizedTest
+    @MethodSource("deletedFlagAndSortParams")
+    public void getAll_SortedWithUserAccessAndDeletedFlag(final String deletedFlag, final SortParams sortParams) throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         final User savedUser = insertUser(signUpRequest);
@@ -110,15 +120,18 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final Tag savedTag = saveTag();
 
         final Question savedQuestion = createQuestion(token, questionRequest);
-        insertDeletedQuestion(generateQuestionRequest(), savedUser);
+        final Question deletedQuestion = insertDeletedQuestion(generateQuestionRequest(), savedUser);
 
         insertQuestionDetails(savedQuestion, savedTag);
+        insertQuestionDetails(deletedQuestion, savedTag);
 
         //when
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("tagIds", savedTag.getId().toString()))
+                        .param("tagIds", savedTag.getId().toString())
+                        .param("deletedFlag", deletedFlag)
+                        .param("sortParams", sortParams.toString()))
                         .andExpect(status().isOk());
 
         final List<Question> foundQuestions =
@@ -127,12 +140,14 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         //then
         assertAll(
                 () -> assertEquals(1, foundQuestions.size()),
-                () -> assertQuestionsListFields(foundQuestions, savedUser, savedQuestion)
+                () -> assertQuestionsListFields(foundQuestions, savedUser, savedQuestion),
+                () -> assertNull(foundQuestions.stream().findFirst().get().getDeletedAt())
         );
     }
 
-    @Test
-    public void getAll_withAdminAccess() throws Exception {
+    @ParameterizedTest
+    @MethodSource("deletedFlagAndSortParams")
+    public void getAll_SortedWithAdminAccessAndDeletedFlag(final String deletedFlag, final SortParams sortParams) throws Exception {
         //given
         final SignUpRequest signUpUserRequest = generateSignUpRequest();
         final User savedUser = insertUser(signUpUserRequest);
@@ -147,7 +162,10 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final Tag savedTag = saveTag();
 
         final Question savedQuestion = createQuestion(usersToken, questionRequest);
-        final Question deletedQuestion = insertDeletedQuestion(generateQuestionRequest(), savedUser);
+
+        final QuestionRequest deletedQuestionRequest = generateQuestionRequest();
+        deletedQuestionRequest.setTitle(savedQuestion.getTitle());
+        final Question deletedQuestion = insertDeletedQuestion(deletedQuestionRequest, savedUser);
 
         insertQuestionDetails(savedQuestion, savedTag);
         insertQuestionDetails(deletedQuestion, savedTag);
@@ -156,7 +174,9 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final ResultActions result = mockMvc.perform(get(QUESTION_URL + "/all")
                         .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .param("tagIds", savedTag.getId().toString()))
+                        .param("tagIds", savedTag.getId().toString())
+                        .param("deletedFlag", deletedFlag)
+                        .param("sortParams", sortParams.toString()))
                         .andExpect(status().isOk());
 
         final List<Question> foundQuestions =
@@ -164,13 +184,14 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         //then
         assertAll(
-                () -> assertEquals(2, foundQuestions.size()),
-                () -> assertQuestionsListFields(foundQuestions, savedUser, savedQuestion)
+                () -> assertEquals(1, foundQuestions.size())
         );
     }
 
-    @Test
-    public void getAnswersByQuestionId_withUserAccess() throws Exception {
+    @ParameterizedTest
+    @MethodSource("deletedFlagAndSortParams")
+    public void getAnswersByQuestionId_SortedWithUserAccessAndDeletedFlag
+            (final String deletedFlag, final SortParams sortParams) throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
         final User savedUser = insertUser(signUpRequest);
@@ -186,7 +207,9 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         //when
         final MvcResult result = mockMvc.perform(get(format(QUESTION_URL + "/%s/answers", savedQuestion.getId()))
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("isDeleted", deletedFlag)
+                        .param("sortParams", sortParams.toString()))
                         .andExpect(status().isOk())
                         .andReturn();
 
@@ -196,12 +219,15 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         //then
         assertAll(
                 () -> assertEquals(1, foundAnswers.size()),
-                () -> assertAnswersListFields(foundAnswers, savedAnswer)
+                () -> assertAnswersListFields(foundAnswers, savedAnswer),
+                () -> assertNull(foundAnswers.stream().findFirst().get().getDeletedAt())
         );
     }
 
-    @Test
-    public void getAnswersByQuestionId_withAdminAccess() throws Exception {
+    @ParameterizedTest
+    @MethodSource({"deletedFlagAndSortParams"})
+    public void getAnswersByQuestionId_SortedWithAdminAccessAndDeletedFlag
+            (final String deletedFlag, final SortParams sortParams) throws Exception {
         //given
         final SignUpRequest signUpUserRequest = generateSignUpRequest();
         final User savedUser = insertUser(signUpUserRequest);
@@ -216,12 +242,17 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final Question savedQuestion = createQuestion(usersToken, questionRequest);
 
         final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), usersToken);
-        insertDeletedAnswer(generateAnswerRequest(), savedUser, savedQuestion);
+
+        final AnswerRequest deletedAnswerRequest = generateAnswerRequest();
+        deletedAnswerRequest.setText(savedAnswer.getText());
+        insertDeletedAnswer(deletedAnswerRequest, savedUser, savedQuestion);
 
         //when
         final MvcResult result = mockMvc.perform(get(format(QUESTION_URL + "/%s/answers", savedQuestion.getId()))
                         .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .param("isDeleted", deletedFlag)
+                        .param("sortParams", sortParams.toString()))
                         .andExpect(status().isOk())
                         .andReturn();
 
@@ -230,8 +261,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         //then
         assertAll(
-                () -> assertEquals(2, foundAnswers.size()),
-                () -> assertAnswersListFields(foundAnswers, savedAnswer)
+                () -> assertEquals(1, foundAnswers.size())
         );
     }
 
@@ -549,10 +579,12 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
                         .andExpect(status().isNoContent())
                         .andReturn();
 
-        final List<AnswerEntity> foundAnswers = answerRepository.findAllByQuestionId(savedQuestion.getId(), false);
+        final Page<AnswerEntity> foundAnswers =
+                answerRepository.findAllByQuestionId(savedQuestion.getId(), savedAnswer.getText(), false,
+                        toPageRequest(1, 10));
 
         //then
-        assertEquals(0, foundAnswers.size());
+        assertEquals(0, foundAnswers.getContent().size());
     }
 
     @Test
@@ -713,5 +745,23 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
         //then
         result.andExpect(status().isForbidden());
+    }
+
+    static Stream<Arguments> deletedFlagAndSortParams() {
+        return Stream.of(
+                arguments("false", CREATED_UP),
+                arguments("false", CREATED_DOWN),
+                arguments("false", UPDATED_UP),
+                arguments("false", UPDATE_DOWN),
+                arguments("false", RATING_UP),
+                arguments("false", RATING_DOWN),
+                arguments("false", DELETED_DOWN),
+                arguments("false", DELETED_UP),
+                arguments("true", CREATED_DOWN),
+                arguments("true", CREATED_UP),
+                arguments("true", UPDATE_DOWN),
+                arguments("true", UPDATED_UP),
+                arguments("true", DELETED_DOWN),
+                arguments("true", DELETED_UP));
     }
 }

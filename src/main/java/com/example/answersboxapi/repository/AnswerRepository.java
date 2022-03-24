@@ -1,23 +1,29 @@
 package com.example.answersboxapi.repository;
 
 import com.example.answersboxapi.entity.AnswerEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface AnswerRepository extends JpaRepository<AnswerEntity, UUID> {
 
-    @Query(value = "SELECT * " +
-            "FROM answer " +
-            "WHERE question_id = :questionId " +
-            "AND (:isAdmin = true OR deleted_at IS NULL);", nativeQuery = true)
-    List<AnswerEntity> findAllByQuestionId(@Param("questionId") final UUID questionId, @Param("isAdmin") final boolean isAdmin);
+    @Query(value = "SELECT answer " +
+            "FROM AnswerEntity answer " +
+            "WHERE (answer.question.id = :questionId " +
+            "AND answer.text LIKE %:searchParam%) " +
+            "AND (:deletedFlag IS NULL OR :deletedFlag = TRUE AND answer.deletedAt IS NOT NULL " +
+            "      OR :deletedFlag = FALSE AND answer.deletedAt IS NULL) ")
+    Page<AnswerEntity> findAllByQuestionId(@Param("questionId") final UUID questionId,
+                                           @Param("searchParam") final String searchParam,
+                                           @Param("deletedFlag") final boolean deletedFlag,
+                                           final Pageable pageable);
 
     @Modifying
     @Query(value = "UPDATE answer " +
