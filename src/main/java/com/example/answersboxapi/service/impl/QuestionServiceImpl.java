@@ -19,7 +19,6 @@ import com.example.answersboxapi.service.*;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +33,7 @@ import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.FilterUtils.createDeletedFlagDefault;
 import static com.example.answersboxapi.utils.SecurityUtils.hasAccess;
 import static com.example.answersboxapi.utils.SecurityUtils.isAdmin;
-import static com.example.answersboxapi.utils.pagination.PagingUtils.toPageRequest;
-import static com.example.answersboxapi.utils.sorting.SortingUtils.useSortOrDefault;
+import static com.example.answersboxapi.utils.pagination.PagingUtils.createPageableWithSort;
 
 @Service
 public class QuestionServiceImpl implements QuestionService {
@@ -100,11 +98,9 @@ public class QuestionServiceImpl implements QuestionService {
 
         final boolean deletedFlagOrDefault = createDeletedFlagDefault(isDeleted);
 
-        final String sortParam = sortParams.getSortParam();
-        final Sort sort = useSortOrDefault(sortParam, QuestionEntity.class);
-        final Pageable pageable = toPageRequest(page, size, sort);
+        final Pageable pageable = createPageableWithSort(page, size, sortParams, QuestionEntity.class);
 
-        return questionRepository.findAll(pageable, foundTags, searchParam, deletedFlagOrDefault).map(QUESTION_MAPPER::toModel);
+        return questionRepository.findAll(foundTags, searchParam, deletedFlagOrDefault, pageable).map(QUESTION_MAPPER::toModel);
     }
 
     @Override
@@ -113,11 +109,9 @@ public class QuestionServiceImpl implements QuestionService {
                                                final SortParams sortParams, final String searchParam,
                                                final Boolean isDeleted) {
 
-        final String sortParam = sortParams.getSortParam();
-        final Sort sort = useSortOrDefault(sortParam, AnswerEntity.class);
-        final Pageable pageable = toPageRequest(page, size, sort);
-
         final boolean deletedFlagOrDefault = createDeletedFlagDefault(isDeleted);
+
+        final Pageable pageable = createPageableWithSort(page, size, sortParams, AnswerEntity.class);
 
         return answerService.getAllByQuestionId(id, searchParam, deletedFlagOrDefault, pageable);
     }

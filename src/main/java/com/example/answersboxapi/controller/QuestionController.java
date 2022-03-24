@@ -1,12 +1,12 @@
 package com.example.answersboxapi.controller;
 
 import com.example.answersboxapi.config.SwaggerConfig;
+import com.example.answersboxapi.model.SortParams;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.question.QuestionUpdateRequest;
 import com.example.answersboxapi.service.QuestionService;
-import com.example.answersboxapi.model.SortParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class QuestionController {
     public ResponseEntity<List<Question>> getAll(@RequestParam(defaultValue = "1") final int page,
                                                  @RequestParam(defaultValue = "10") final int size,
                                                  @RequestParam final List<UUID> tagIds,
-                                                 @RequestParam(defaultValue = "-createdAt") final SortParams sortParams,
+                                                 @RequestParam(defaultValue = "CREATED_DOWN") final SortParams sortParams,
                                                  @RequestParam(defaultValue = "", required = false) final String searchParam,
                                                  @RequestParam(required = false, defaultValue = "false") final Boolean isDeleted) {
         final Page<Question> foundQuestions = questionService.getAll(page, size, tagIds, sortParams, searchParam, isDeleted);
@@ -53,7 +53,7 @@ public class QuestionController {
     public ResponseEntity<List<Answer>> getAnswersByQuestionId(@PathVariable final UUID id,
                                                                @RequestParam(defaultValue = "1") final int page,
                                                                @RequestParam(defaultValue = "10") final int size,
-                                                               @RequestParam(defaultValue = "-createdAt") final SortParams sortParams,
+                                                               @RequestParam(defaultValue = "CREATED_DOWN") final SortParams sortParams,
                                                                @RequestParam(defaultValue = "", required = false) final String searchParam,
                                                                @RequestParam(defaultValue = "false", required = false) final Boolean isDeleted) {
         final Page<Answer> answers = questionService.getAnswersByQuestionId(id, page, size, sortParams, searchParam, isDeleted);

@@ -25,10 +25,10 @@ public interface QuestionRepository extends JpaRepository<QuestionEntity, UUID> 
             "WHERE (:deletedFlag IS NULL OR :deletedFlag = TRUE AND question.deletedAt IS NOT NULL " +
             "           OR :deletedFlag = FALSE AND question.deletedAt IS NULL) " +
             "AND (question.title LIKE %:searchParam% OR question.description LIKE %:searchParam%) ")
-    Page<QuestionEntity> findAll(final Pageable pageable,
-                                 @Param("tagIds") final List<TagEntity> tagIds,
+    Page<QuestionEntity> findAll(@Param("tagIds") final List<TagEntity> tagIds,
                                  @Param("searchParam") final String searchParam,
-                                 @Param("deletedFlag") final boolean deletedFlag);
+                                 @Param("deletedFlag") final boolean deletedFlag,
+                                 final Pageable pageable);
 
     @Query(value = "SELECT * " +
             "FROM question " +
