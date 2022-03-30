@@ -1,6 +1,9 @@
 package com.example.answersboxapi.integration;
 
-import com.example.answersboxapi.entity.*;
+import com.example.answersboxapi.entity.AnswerEntity;
+import com.example.answersboxapi.entity.QuestionDetailsEntity;
+import com.example.answersboxapi.entity.QuestionEntity;
+import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
@@ -18,6 +21,7 @@ import com.example.answersboxapi.utils.PostgresInitializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.provider.Arguments;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,13 +34,17 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import static com.example.answersboxapi.enums.UserEntityRole.ROLE_ADMIN;
+import static com.example.answersboxapi.enums.UserEntityRole.ROLE_USER;
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionDetailsMapper.QUESTION_DETAILS_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.TagMapper.TAG_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -106,9 +114,18 @@ public class AbstractIntegrationTest {
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
 
+    protected User insertUserOrAdmin(final SignUpRequest signUpRequest, final UserEntityRole role) {
+        final UserEntity userToSave = createEntity(signUpRequest);
+
+        if (role.equals(ROLE_ADMIN)){
+            userToSave.setRole(role);
+        }
+        return  USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
+    }
+
     protected User insertAdmin(final SignUpRequest signUpRequest) {
         final UserEntity userToSave = createEntity(signUpRequest);
-        userToSave.setRole(UserEntityRole.ROLE_ADMIN);
+        userToSave.setRole(ROLE_ADMIN);
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
@@ -203,5 +220,19 @@ public class AbstractIntegrationTest {
                 .build();
 
         return QUESTION_DETAILS_MAPPER.toModel(questionDetailsRepository.saveAndFlush(questionDetails));
+    }
+
+    static Stream<Arguments> increaseRating() {
+        return Stream.of(
+                arguments(status().isOk(), null, ROLE_USER, +1),
+                arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, 0),
+                arguments(status().isForbidden(), null, UserEntityRole.ROLE_ADMIN, 0));
+    }
+
+    static Stream<Arguments> decreaseRating() {
+        return Stream.of(
+                arguments(status().isOk(), null, ROLE_USER, -1),
+                arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, 0),
+                arguments(status().isForbidden(), null, UserEntityRole.ROLE_ADMIN, 0));
     }
 }
