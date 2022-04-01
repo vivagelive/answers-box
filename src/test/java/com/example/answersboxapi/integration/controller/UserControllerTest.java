@@ -25,52 +25,29 @@ public class UserControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("deleteWithStatusesAndRoles")
-    public void deleteById_withUserAndAdminsAccess(final ResultMatcher status, final UserEntityRole role) throws Exception {
+    public void deleteById_happyPath(final ResultMatcher status, final UserEntityRole role, UUID id, final boolean isCreator) throws Exception {
         //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        final User savedUser = insertUserOrAdmin(signUpRequest, role);
+        final SignUpRequest usersRequest = generateSignUpRequest();
+        insertUserOrAdmin(usersRequest, role);
+        TokenResponse activeToken = createSignIn(usersRequest);
 
-        final TokenResponse token = createSignIn(signUpRequest);
+        final UUID idForSearch = checkIdForSearch(id, savedUser.getId());
 
-        //when
-        final ResultActions result = mockMvc.perform(delete(USER_URL + "/{id}", savedUser.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken()));
-
-        //then
-        result.andExpect(status);
-    }
-
-    @ParameterizedTest
-    @MethodSource("deleteWithStatusesAndId")
-    public void deleteById_whenWrongIdOrForbidden(final ResultMatcher status, UUID idForSearch) throws Exception {
-        //given
-        final User savedUser = insertUser(generateSignUpRequest());
-
-        final SignUpRequest activeUser = generateSignUpRequest();
-        insertUser(activeUser);
-        final TokenResponse token = createSignIn(activeUser);
-
-        if (idForSearch == null) {
-            idForSearch = savedUser.getId();
-        }
+        activeToken = isCreator(isCreator, activeToken, token);
 
         //when
         final ResultActions result = mockMvc.perform(delete(USER_URL + "/{id}", idForSearch)
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken()));
+                .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken()));
 
         //then
         result.andExpect(status);
-    }
-
-    static Stream<Arguments> deleteWithStatusesAndId() {
-        return Stream.of(
-                arguments(status().isNotFound(), UUID.randomUUID()),
-                arguments(status().isForbidden(), null));
     }
 
     static Stream<Arguments> deleteWithStatusesAndRoles() {
         return Stream.of(
-                arguments(status().isNoContent(), ROLE_USER, generateSignUpRequest()),
-                arguments(status().isNoContent(), ROLE_ADMIN, generateSignUpRequest()));
+                arguments(status().isNoContent(), ROLE_USER,  null, true),
+                arguments(status().isNoContent(), ROLE_ADMIN,  null, false),
+                arguments(status().isNotFound(), ROLE_USER, UUID.randomUUID(), false),
+                arguments(status().isForbidden(), ROLE_USER,  null, false));
     }
 }

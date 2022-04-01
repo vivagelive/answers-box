@@ -7,12 +7,14 @@ import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
+import com.example.answersboxapi.model.answer.AnswerUpdateRequest;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionDetails;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.question.QuestionUpdateRequest;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
 import com.example.answersboxapi.model.user.User;
@@ -20,6 +22,7 @@ import com.example.answersboxapi.repository.*;
 import com.example.answersboxapi.utils.PostgresInitializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.provider.Arguments;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +90,34 @@ public class AbstractIntegrationTest {
     @Autowired
     protected TagRepository tagRepository;
 
+    protected TokenResponse token;
+    protected Tag savedTag;
+    protected Question savedQuestion;
+    protected User savedUser;
+    protected Answer savedAnswer;
+    protected SignUpRequest signUpRequest;
+    protected QuestionRequest questionRequest;
+    protected AnswerRequest answerRequest;
+    protected TagRequest tagRequest;
+    protected AnswerUpdateRequest updateAnswerRequest;
+    protected QuestionUpdateRequest questionUpdateRequest;
+
+    @BeforeEach
+    protected void fillDataBase() throws Exception {
+        answerRequest = generateAnswerRequest();
+        signUpRequest = generateSignUpRequest();
+        tagRequest = generateTagRequest();
+        questionRequest = generateQuestionRequest();
+        questionUpdateRequest = generateQuestionUpdateRequest();
+        updateAnswerRequest = generateAnswerUpdateRequest();
+
+        savedUser = insertUser(signUpRequest);
+        token = createSignIn(signUpRequest);
+        savedQuestion = createQuestion(token, questionRequest);
+        savedAnswer = createAnswer(savedQuestion.getId(), answerRequest, token);
+        savedTag = saveTag();
+    }
+
     @AfterEach
     protected void clearDataBase() {
         userRepository.deleteAll();
@@ -109,40 +140,32 @@ public class AbstractIntegrationTest {
     }
 
     protected User insertUser(final SignUpRequest signUpRequest) {
-        final UserEntity userToSave = createEntity(signUpRequest);
+        final UserEntity userToSave = createEntity(signUpRequest, ROLE_USER);
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
 
     protected User insertUserOrAdmin(final SignUpRequest signUpRequest, final UserEntityRole role) {
-        final UserEntity userToSave = createEntity(signUpRequest);
+        final UserEntity userToSave = createEntity(signUpRequest, role);
 
-        if (role.equals(ROLE_ADMIN)){
-            userToSave.setRole(role);
-        }
         return  USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
 
     protected User insertAdmin(final SignUpRequest signUpRequest) {
-        final UserEntity userToSave = createEntity(signUpRequest);
-        userToSave.setRole(ROLE_ADMIN);
+        final UserEntity userToSave = createEntity(signUpRequest, ROLE_ADMIN);
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
 
-    private UserEntity createEntity(final SignUpRequest signUpRequest) {
+    private UserEntity createEntity(final SignUpRequest signUpRequest, final UserEntityRole role) {
         final String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
 
         final UserEntity userToSave = generateUser();
         userToSave.setEmail(signUpRequest.getEmail());
         userToSave.setPassword(encodedPassword);
+        userToSave.setRole(role);
 
         return userToSave;
-    }
-
-    protected Tag createTagFromResponse(final MvcResult result) throws Exception {
-        final String tagResponse = result.getResponse().getContentAsString();
-        return objectMapper.readValue(tagResponse, Tag.class);
     }
 
     protected Tag createTag(final TokenResponse token, final TagRequest tagRequest) throws Exception {
@@ -234,5 +257,18 @@ public class AbstractIntegrationTest {
                 arguments(status().isOk(), null, ROLE_USER, -1),
                 arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, 0),
                 arguments(status().isForbidden(), null, UserEntityRole.ROLE_ADMIN, 0));
+    }
+    protected UUID checkIdForSearch (UUID idForSearch, final UUID savedId) {
+        if (idForSearch == null) {
+            idForSearch = savedId;
+        }
+        return idForSearch;
+    }
+
+    protected TokenResponse isCreator (final boolean isCreator, TokenResponse activeToken, final TokenResponse token) {
+        if (isCreator) {
+            activeToken = token;
+        }
+        return activeToken;
     }
 }

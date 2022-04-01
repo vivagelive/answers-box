@@ -18,13 +18,11 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static com.example.answersboxapi.enums.UserEntityRole.*;
 import static com.example.answersboxapi.enums.UserEntityRole.ROLE_ADMIN;
 import static com.example.answersboxapi.enums.UserEntityRole.ROLE_USER;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateSignUpRequest;
 import static com.example.answersboxapi.utils.GeneratorUtil.generateTagRequest;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.params.provider.Arguments.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -55,13 +53,7 @@ public class TagControllerTest extends AbstractIntegrationTest {
 
     @Test
     public void create_whenNotSignedIn() throws Exception {
-        //given
-        final TagRequest tagRequest = generateTagRequest();
-
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        //when
+        //given & when
         final ResultActions result = mockMvc.perform(post(TAG_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsBytes(tagRequest)));
@@ -73,18 +65,16 @@ public class TagControllerTest extends AbstractIntegrationTest {
     @Test
     public void create_whenDuplicate() throws Exception {
         //given
-        final TagRequest tagRequest = generateTagRequest();
+        final SignUpRequest adminRequest = generateSignUpRequest();
+        insertAdmin(adminRequest);
 
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertAdmin(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
+        final TokenResponse adminToken = createSignIn(adminRequest);
 
         //when
-        createTag(token, tagRequest);
+        createTag(adminToken, tagRequest);
 
         final ResultActions result = mockMvc.perform(post(TAG_URL)
-                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                        .header(AUTHORIZATION, TOKEN_PREFIX + adminToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(tagRequest)));
 
@@ -94,10 +84,8 @@ public class TagControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("deleteWithStatusesAndRoles")
-    public void deleteById_withUserAndAdminsAccess(final ResultMatcher status, final UserEntityRole role) throws Exception {
+    public void deleteById_withUserAndAdminsAccess(final ResultMatcher status, final UserEntityRole role, UUID id) throws Exception {
         //given
-        final TagRequest tagRequest = generateTagRequest();
-
         final SignUpRequest signUpRequest = generateSignUpRequest();
 
         SignUpRequest adminsRequest = generateSignUpRequest();
@@ -109,8 +97,10 @@ public class TagControllerTest extends AbstractIntegrationTest {
 
         final TokenResponse activeUser = createSignIn(signUpRequest);
 
+        final UUID idForSearch = checkIdForSearch(id, savedTag.getId());
+
         //when
-        mockMvc.perform(delete(TAG_URL + "/{id}", savedTag.getId())
+        mockMvc.perform(delete(TAG_URL + "/{id}", idForSearch)
                 .header(AUTHORIZATION, TOKEN_PREFIX + activeUser.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status)
@@ -125,8 +115,6 @@ public class TagControllerTest extends AbstractIntegrationTest {
     @Test
     public void deleteById_whenNotSignedIn() throws Exception {
         //given
-        final TagRequest tagRequest = generateTagRequest();
-
         final SignUpRequest signUpRequest = generateSignUpRequest();
         insertAdmin(signUpRequest);
 
@@ -141,31 +129,11 @@ public class TagControllerTest extends AbstractIntegrationTest {
         result.andExpect(status().isUnauthorized());
     }
 
-    @Test
-    public void deleteById_whenTagNotFound() throws Exception {
-        //given
-        final TagRequest tagRequest = generateTagRequest();
-
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertAdmin(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-        createTag(token, tagRequest);
-
-        final UUID notExistingId = UUID.randomUUID();
-
-        //when
-        final ResultActions result = mockMvc.perform(delete(TAG_URL + "/{id}", notExistingId)
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken()));
-
-        //then
-        result.andExpect(status().isNotFound());
-    }
-
     static Stream<Arguments> deleteWithStatusesAndRoles() {
         return Stream.of(
-                arguments(status().isForbidden(), ROLE_USER),
-                arguments(status().isNoContent(), ROLE_ADMIN));
+                arguments(status().isForbidden(), ROLE_USER, null),
+                arguments(status().isNoContent(), ROLE_ADMIN, null),
+                arguments(status().isNotFound(), ROLE_ADMIN, UUID.randomUUID()));
     }
 
     static Stream<Arguments> createWithStatusesAndRoles() {
