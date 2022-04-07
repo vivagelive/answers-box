@@ -25,7 +25,7 @@ public class UserControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("deleteWithStatusesAndRoles")
-    public void deleteById_happyPath(final ResultMatcher status, final UserEntityRole role, UUID id, final boolean isCreator) throws Exception {
+    public void deleteUser(final ResultMatcher status, final UserEntityRole role, UUID id, final boolean isCreator) throws Exception {
         //given
         final SignUpRequest usersRequest = generateSignUpRequest();
         insertUserOrAdmin(usersRequest, role);

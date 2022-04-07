@@ -1,5 +1,6 @@
 package com.example.answersboxapi.integration.controller;
 
+import com.example.answersboxapi.entity.QuestionEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.SortParams;
@@ -9,16 +10,18 @@ import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.question.QuestionUpdateRequest;
+import com.example.answersboxapi.model.user.User;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -27,8 +30,8 @@ import static com.example.answersboxapi.enums.UserEntityRole.ROLE_ADMIN;
 import static com.example.answersboxapi.enums.UserEntityRole.ROLE_USER;
 import static com.example.answersboxapi.model.SortParams.*;
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
+import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertQuestionFields;
 import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertQuestionsListFields;
-import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -38,27 +41,29 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("createWithStatusesAndRoles")
-    public void create_happyPath(final ResultMatcher status, final UserEntityRole role,
-                                 final QuestionRequest questionRequest) throws Exception {
+    public void createQuestion(final ResultMatcher status, final UserEntityRole role,
+                               final QuestionRequest questionRequest, final boolean happyCondition) throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUserOrAdmin(signUpRequest, role);
+        final User activeUser = insertUserOrAdmin(signUpRequest, role);
 
         final TokenResponse token = createSignIn(signUpRequest);
 
         //when
-        final ResultActions result = mockMvc.perform(post(QUESTION_URL)
+        final MvcResult result = mockMvc.perform(post(QUESTION_URL)
                 .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(questionRequest)));
+                .content(objectMapper.writeValueAsString(questionRequest)))
+                .andExpect(status)
+                .andReturn();
 
         //then
-        result.andExpect(status);
+        assertCondition(happyCondition, result, activeUser);
     }
 
     @ParameterizedTest
     @MethodSource("deletedFlagAndSortParams")
-    public void getAll_happyPath(final String deletedFlag, final SortParams sortParams, final UserEntityRole role) throws Exception {
+    public void getAllQuestion(final String deletedFlag, final SortParams sortParams, final UserEntityRole role) throws Exception {
         //given
         final Question deletedQuestion = insertDeletedQuestion(generateQuestionRequest(), savedUser);
 
@@ -91,8 +96,8 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("deletedFlagAndSortParams")
-    public void getAnswersByQuestionId_happyPath (final String deletedFlag, final SortParams sortParams,
-                                                                final UserEntityRole role) throws Exception {
+    public void getAnswersByQuestionId (final String deletedFlag, final SortParams sortParams,
+                                        final UserEntityRole role) throws Exception {
         //given
         final SignUpRequest activeUserRequest = generateSignUpRequest();
         insertUserOrAdmin(activeUserRequest, role);
@@ -101,7 +106,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         insertDeletedAnswer(generateAnswerRequest(), savedUser, savedQuestion);
 
         //when
-        final MvcResult result = mockMvc.perform(get(format(QUESTION_URL + "/%s/answers", savedQuestion.getId()))
+        final MvcResult result = mockMvc.perform(get(QUESTION_URL + "/{id}/answers", savedQuestion.getId())
                         .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .param("isDeleted", deletedFlag)
@@ -118,26 +123,29 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("addTagWithStatusesAndRoles")
-    public void addTagToQuestion_happyPath(final ResultMatcher status, UUID questionId, UUID tagId) throws Exception {
+    public void addTagToQuestion(final ResultMatcher status, UUID questionId, UUID tagId, final boolean happyCondition) throws Exception {
         //given
         final UUID questionIdForSearch = checkIdForSearch(questionId, savedQuestion.getId());
         final UUID tagIdForSearch = checkIdForSearch(tagId, savedTag.getId());
 
         //when
-        final ResultActions result =
+        final MvcResult result =
                 mockMvc.perform(put(QUESTION_URL + "/{questionId}/add-tag/{tagId}", questionIdForSearch, tagIdForSearch)
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                        .contentType(MediaType.APPLICATION_JSON));
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status)
+                        .andReturn();
 
         // then
-        result.andExpect(status);
+        assertCondition(happyCondition, result, savedUser);
     }
 
-    @Test
-    public void addTagToQuestion_whenNotSignedIn() throws Exception {
+    @ParameterizedTest
+    @MethodSource("httpMethodsWithUrls")
+    public void questionEndpoints_whenNotSignedIn(final HttpMethod method, final String url) throws Exception {
         //given & when
         final ResultActions result =
-                mockMvc.perform(put(QUESTION_URL + "/{questionId}/add-tag/{tagId}", savedQuestion.getId(), savedTag.getId())
+                mockMvc.perform(request(method, QUESTION_URL + url, savedQuestion.getId(), savedTag.getId())
                         .contentType(MediaType.APPLICATION_JSON));
 
         //then
@@ -146,39 +154,30 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("addTagWithStatusesAndRoles")
-    public void removeTagFromQuestion_happyPath(final ResultMatcher status, UUID questionId, UUID tagId) throws Exception {
+    public void removeTagFromQuestion(final ResultMatcher status, UUID questionId, UUID tagId, final boolean happyCondition) throws Exception {
         //given
         final UUID questionIdForSearch = checkIdForSearch(questionId, savedQuestion.getId());
         final UUID tagIdForSearch = checkIdForSearch(tagId, savedTag.getId());
 
         //when
-        final ResultActions result
+        final MvcResult result
                 = mockMvc.perform(put(QUESTION_URL + "/{questionId}/remove-tag/{tagId}", questionIdForSearch, tagIdForSearch)
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                        .contentType(MediaType.APPLICATION_JSON));
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status)
+                        .andReturn();
 
         //then
-        result.andExpect(status);
-    }
-
-    @Test
-    public void removeTagFromQuestion_whenNotSignedIn() throws Exception {
-        //given & when
-        final ResultActions result =
-                mockMvc.perform(put(QUESTION_URL + "/{questionId}/remove-tag/{tagId}", savedQuestion.getId(), savedTag.getId())
-                        .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isUnauthorized());
+        assertCondition(happyCondition, result, savedUser);
     }
 
     @ParameterizedTest
     @MethodSource("updateWithEmptyFields")
-    public void update_happyPath(final ResultMatcher status, UUID id, final QuestionUpdateRequest questionUpdateRequest,
-                                 final boolean isCreator) throws Exception {
+    public void updateQuestion(final ResultMatcher status, UUID id, final QuestionUpdateRequest questionUpdateRequest,
+                               final boolean isCreator, final boolean happyCondition) throws Exception {
         //given
         final SignUpRequest userRequest = generateSignUpRequest();
-        insertUser(userRequest);
+        insertUserOrAdmin(userRequest, ROLE_USER);
         TokenResponse activeToken = createSignIn(userRequest);
 
         final UUID idForSearch = checkIdForSearch(id, savedQuestion.getId());
@@ -186,40 +185,21 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         activeToken = isCreator(isCreator, activeToken, token);
 
         //when
-        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}", idForSearch)
+        final MvcResult result = mockMvc.perform(put(QUESTION_URL + "/{id}", idForSearch)
                         .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(questionUpdateRequest)));
+                        .content(objectMapper.writeValueAsString(questionUpdateRequest)))
+                        .andExpect(status)
+                        .andReturn();
 
         //then
-        result.andExpect(status);
-    }
-
-    @Test
-    public void update_whenNotSignedIn() throws Exception {
-        //given & when
-        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}", savedQuestion.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(questionUpdateRequest)));
-
-        //then
-        result.andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    public void delete_whenNotSignedIn() throws Exception {
-        //given & when
-        final ResultActions result = mockMvc.perform(delete(QUESTION_URL + "/{id}", savedQuestion.getId())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isUnauthorized());
+        assertCondition(happyCondition, result, savedUser);
     }
 
     @ParameterizedTest
     @MethodSource("deleteWithStatusesRolesAndIds")
-    public void deleteById_happyPath(final ResultMatcher status, final UserEntityRole role,
-                                     UUID id, final boolean isCreator) throws Exception {
+    public void deleteQuestion(final ResultMatcher status, final UserEntityRole role,
+                               UUID id, final boolean isCreator) throws Exception {
         //given
         final SignUpRequest activeUserRequest = generateSignUpRequest();
         insertUserOrAdmin(activeUserRequest, role);
@@ -240,8 +220,8 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("increaseRating")
-    public void increaseRatingById_happyPath(final ResultMatcher status, UUID id,
-                                             final UserEntityRole role) throws Exception {
+    public void increaseQuestionRating(final ResultMatcher status, UUID id, final UserEntityRole role,
+                                       final Integer increaseDelta, final boolean happyCondition) throws Exception {
         //given
         final SignUpRequest activeUserRequest = generateSignUpRequest();
         insertUserOrAdmin(activeUserRequest, role);
@@ -250,27 +230,24 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final UUID idForSearch = checkIdForSearch(id, savedQuestion.getId());
 
         //when
-        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}/increase-rating", idForSearch)
+        final MvcResult result = mockMvc.perform(put(QUESTION_URL + "/{id}/increase-rating", idForSearch)
                 .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON));
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status)
+                .andReturn();
+
+        final QuestionEntity foundQuestion = questionRepository.getById(savedQuestion.getId());
 
         //then
-        result.andExpect(status);
-    }
-
-    @Test
-    public void increaseRating_whenNotSignedIn() throws Exception {
-        //given & when
-        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}/increase-rating", savedQuestion.getId())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isUnauthorized());
+        assertAll(
+                () -> assertEquals(savedQuestion.getRating() + increaseDelta, foundQuestion.getRating()),
+                () -> assertCondition(happyCondition, result, savedUser));
     }
 
     @ParameterizedTest
     @MethodSource("decreaseRating")
-    public void decreaseRatingById_happyPath(final ResultMatcher status, UUID id, final UserEntityRole role) throws Exception {
+    public void decreaseQuestionRating_happyPath(final ResultMatcher status, UUID id, final UserEntityRole role,
+                                                 final Integer decreaseDelta, final boolean happyCondition) throws Exception {
         //given
         final SignUpRequest activeUserRequest = generateSignUpRequest();
         insertUserOrAdmin(activeUserRequest, role);
@@ -279,12 +256,18 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
         final UUID idForSearch = checkIdForSearch(id, savedQuestion.getId());
 
         //when
-        final ResultActions result = mockMvc.perform(put(QUESTION_URL + "/{id}/decrease-rating", idForSearch)
+        final MvcResult result = mockMvc.perform(put(QUESTION_URL + "/{id}/decrease-rating", idForSearch)
                 .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON));
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status)
+                .andReturn();
+
+        final QuestionEntity foundQuestion = questionRepository.getById(savedQuestion.getId());
 
         //then
-        result.andExpect(status);
+        assertAll(
+                () -> assertEquals(savedQuestion.getRating() + decreaseDelta, foundQuestion.getRating()),
+                () -> assertCondition(happyCondition, result, savedUser));
     }
 
     static Stream<Arguments> deletedFlagAndSortParams() {
@@ -308,24 +291,24 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
     }
     static Stream<Arguments> createWithStatusesAndRoles() {
         return Stream.of(
-                arguments(status().isCreated(), ROLE_USER, generateQuestionRequest()),
-                arguments(status().isForbidden(), ROLE_ADMIN, generateQuestionRequest()),
-                arguments(status().isBadRequest(), ROLE_USER, generateQuestionWithEmptyFields()));
+                arguments(status().isCreated(), ROLE_USER, generateQuestionRequest(), true),
+                arguments(status().isForbidden(), ROLE_ADMIN, generateQuestionRequest(), false),
+                arguments(status().isBadRequest(), ROLE_USER, generateQuestionWithEmptyFields(), false));
     }
 
     static Stream<Arguments> addTagWithStatusesAndRoles() {
         return Stream.of(
-                arguments(status().isOk(), null, null),
-                arguments(status().isNotFound(), UUID.randomUUID(), null),
-                arguments(status().isNotFound(), null, UUID.randomUUID()));
+                arguments(status().isOk(), null, null, true),
+                arguments(status().isNotFound(), UUID.randomUUID(), null, false),
+                arguments(status().isNotFound(), null, UUID.randomUUID(), false));
     }
 
     static Stream<Arguments> updateWithEmptyFields() {
         return Stream.of(
-                arguments(status().isOk(), null, generateQuestionUpdateRequest(), true),
-                arguments(status().isNotFound(), UUID.randomUUID(), generateQuestionUpdateRequest(), false),
-                arguments(status().isBadRequest(), null, generateQuestionUpdateWithEmptyFields(), true),
-                arguments(status().isForbidden(), null, generateQuestionUpdateRequest(), false));
+                arguments(status().isOk(), null, generateQuestionUpdateRequest(), true, true),
+                arguments(status().isNotFound(), UUID.randomUUID(), generateQuestionUpdateRequest(), false, false),
+                arguments(status().isBadRequest(), null, generateQuestionUpdateWithEmptyFields(), true, false),
+                arguments(status().isForbidden(), null, generateQuestionUpdateRequest(), false, false));
     }
 
     static Stream<Arguments> deleteWithStatusesRolesAndIds() {
@@ -334,5 +317,24 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
                 arguments(status().isForbidden(), ROLE_USER, null, false),
                 arguments(status().isNoContent(), ROLE_ADMIN, null, false),
                 arguments(status().isNotFound(), ROLE_USER, UUID.randomUUID(), false));
+    }
+
+    static Stream<Arguments> httpMethodsWithUrls() {
+        return Stream.of(
+                arguments(HttpMethod.POST, ""),
+                arguments(HttpMethod.PUT, "/{id}"),
+                arguments(HttpMethod.DELETE, "/{id}"),
+                arguments(HttpMethod.PUT, "/{questionId}/add-tag/{tagId}"),
+                arguments(HttpMethod.PUT, "/{questionId}/remove-tag/{tagId}"),
+                arguments(HttpMethod.PUT, "/{id}/increase-rating"),
+                arguments(HttpMethod.PUT,"/{id}/decrease-rating"));
+    }
+
+    private void assertCondition(final boolean happyCondition, final MvcResult result, final User activeUser) throws IOException {
+        if (happyCondition){
+            final Question foundQuestion = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Question.class);
+
+            assertQuestionFields(foundQuestion, activeUser, savedTag);
+        }
     }
 }

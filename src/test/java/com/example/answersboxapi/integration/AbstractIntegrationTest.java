@@ -111,7 +111,7 @@ public class AbstractIntegrationTest {
         questionUpdateRequest = generateQuestionUpdateRequest();
         updateAnswerRequest = generateAnswerUpdateRequest();
 
-        savedUser = insertUser(signUpRequest);
+        savedUser = insertUserOrAdmin(signUpRequest, ROLE_USER);
         token = createSignIn(signUpRequest);
         savedQuestion = createQuestion(token, questionRequest);
         savedAnswer = createAnswer(savedQuestion.getId(), answerRequest, token);
@@ -136,23 +136,11 @@ public class AbstractIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        return objectMapper.readValue(result.getResponse().getContentAsByteArray(),TokenResponse.class);
-    }
-
-    protected User insertUser(final SignUpRequest signUpRequest) {
-        final UserEntity userToSave = createEntity(signUpRequest, ROLE_USER);
-
-        return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
+        return objectMapper.readValue(result.getResponse().getContentAsByteArray(), TokenResponse.class);
     }
 
     protected User insertUserOrAdmin(final SignUpRequest signUpRequest, final UserEntityRole role) {
         final UserEntity userToSave = createEntity(signUpRequest, role);
-
-        return  USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
-    }
-
-    protected User insertAdmin(final SignUpRequest signUpRequest) {
-        final UserEntity userToSave = createEntity(signUpRequest, ROLE_ADMIN);
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
@@ -169,14 +157,14 @@ public class AbstractIntegrationTest {
     }
 
     protected Tag createTag(final TokenResponse token, final TagRequest tagRequest) throws Exception {
-         final MvcResult result = mockMvc.perform(post(TAG_URL)
+        final MvcResult result = mockMvc.perform(post(TAG_URL)
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(tagRequest)))
                         .andExpect(status().isCreated())
                         .andReturn();
 
-         return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Tag.class);
+        return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Tag.class);
     }
 
     protected Question createQuestion(final TokenResponse token, final QuestionRequest questionRequest) throws Exception {
@@ -230,7 +218,7 @@ public class AbstractIntegrationTest {
 
     protected Tag saveTag() throws Exception {
         final SignUpRequest signUpAdminRequest = generateSignUpRequest();
-        insertAdmin(signUpAdminRequest);
+        insertUserOrAdmin(signUpAdminRequest, ROLE_ADMIN);
         final TokenResponse adminsToken = createSignIn(signUpAdminRequest);
 
         return createTag(adminsToken, generateTagRequest());
@@ -247,25 +235,26 @@ public class AbstractIntegrationTest {
 
     static Stream<Arguments> increaseRating() {
         return Stream.of(
-                arguments(status().isOk(), null, ROLE_USER, +1),
-                arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, 0),
-                arguments(status().isForbidden(), null, UserEntityRole.ROLE_ADMIN, 0));
+                arguments(status().isOk(), null, ROLE_USER, +1, true),
+                arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, 0, false),
+                arguments(status().isForbidden(), null, UserEntityRole.ROLE_ADMIN, 0, false));
     }
 
     static Stream<Arguments> decreaseRating() {
         return Stream.of(
-                arguments(status().isOk(), null, ROLE_USER, -1),
-                arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, 0),
-                arguments(status().isForbidden(), null, UserEntityRole.ROLE_ADMIN, 0));
+                arguments(status().isOk(), null, ROLE_USER, -1, true),
+                arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, 0, false),
+                arguments(status().isForbidden(), null, UserEntityRole.ROLE_ADMIN, 0, false));
     }
-    protected UUID checkIdForSearch (UUID idForSearch, final UUID savedId) {
+
+    protected UUID checkIdForSearch(UUID idForSearch, final UUID savedId) {
         if (idForSearch == null) {
             idForSearch = savedId;
         }
         return idForSearch;
     }
 
-    protected TokenResponse isCreator (final boolean isCreator, TokenResponse activeToken, final TokenResponse token) {
+    protected TokenResponse isCreator(final boolean isCreator, TokenResponse activeToken, final TokenResponse token) {
         if (isCreator) {
             activeToken = token;
         }
