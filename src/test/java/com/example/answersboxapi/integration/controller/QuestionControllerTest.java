@@ -63,7 +63,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("deletedFlagAndSortParams")
-    public void getAllQuestion(final String deletedFlag, final SortParams sortParams, final UserEntityRole role) throws Exception {
+    public void getAllQuestions(final String deletedFlag, final SortParams sortParams, final UserEntityRole role) throws Exception {
         //given
         final Question deletedQuestion = insertDeletedQuestion(generateQuestionRequest(), savedUser);
 
@@ -96,7 +96,7 @@ public class QuestionControllerTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("deletedFlagAndSortParams")
-    public void getAnswersByQuestionId (final String deletedFlag, final SortParams sortParams,
+    public void getAnswersByQuestionId(final String deletedFlag, final SortParams sortParams,
                                         final UserEntityRole role) throws Exception {
         //given
         final SignUpRequest activeUserRequest = generateSignUpRequest();
