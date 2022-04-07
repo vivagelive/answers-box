@@ -1,11 +1,11 @@
 package com.example.answersboxapi.integration.controller;
 
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
-import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
+import com.example.answersboxapi.model.user.User;
 import com.example.answersboxapi.utils.assertions.AssertionsCaseForModel;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static com.example.answersboxapi.enums.UserEntityRole.ROLE_USER;
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -61,7 +62,7 @@ public class AuthControllerTest extends AbstractIntegrationTest {
     public void signIn_happyPath() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
+        insertUserOrAdmin(signUpRequest, ROLE_USER);
 
         //when
         final TokenResponse token = createSignIn(signUpRequest);
@@ -106,7 +107,7 @@ public class AuthControllerTest extends AbstractIntegrationTest {
     public void logout_happyPath() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
+        insertUserOrAdmin(signUpRequest, ROLE_USER);
 
         final TokenResponse token = createSignIn(signUpRequest);
         final TokenRequest tokenRequest = generateTokenRequest(token.getAccessToken());
@@ -127,7 +128,7 @@ public class AuthControllerTest extends AbstractIntegrationTest {
     public void logout_whenNotSignedIn() throws Exception {
         //given
         final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
+        insertUserOrAdmin(signUpRequest, ROLE_USER);
 
         final TokenResponse token = createSignIn(signUpRequest);
         final TokenRequest tokenRequest = generateTokenRequest(token.getAccessToken());

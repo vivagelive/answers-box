@@ -1,15 +1,20 @@
 package com.example.answersboxapi.integration;
 
-import com.example.answersboxapi.entity.*;
+import com.example.answersboxapi.entity.AnswerEntity;
+import com.example.answersboxapi.entity.QuestionDetailsEntity;
+import com.example.answersboxapi.entity.QuestionEntity;
+import com.example.answersboxapi.entity.UserEntity;
 import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
+import com.example.answersboxapi.model.answer.AnswerUpdateRequest;
 import com.example.answersboxapi.model.auth.SignInRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
 import com.example.answersboxapi.model.question.Question;
 import com.example.answersboxapi.model.question.QuestionDetails;
 import com.example.answersboxapi.model.question.QuestionRequest;
+import com.example.answersboxapi.model.question.QuestionUpdateRequest;
 import com.example.answersboxapi.model.tag.Tag;
 import com.example.answersboxapi.model.tag.TagRequest;
 import com.example.answersboxapi.model.user.User;
@@ -17,7 +22,9 @@ import com.example.answersboxapi.repository.*;
 import com.example.answersboxapi.utils.PostgresInitializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.provider.Arguments;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,13 +37,17 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import static com.example.answersboxapi.enums.UserEntityRole.ROLE_ADMIN;
+import static com.example.answersboxapi.enums.UserEntityRole.ROLE_USER;
 import static com.example.answersboxapi.mapper.AnswerMapper.ANSWER_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionDetailsMapper.QUESTION_DETAILS_MAPPER;
 import static com.example.answersboxapi.mapper.QuestionMapper.QUESTION_MAPPER;
 import static com.example.answersboxapi.mapper.TagMapper.TAG_MAPPER;
 import static com.example.answersboxapi.mapper.UserMapper.USER_MAPPER;
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -79,6 +90,34 @@ public class AbstractIntegrationTest {
     @Autowired
     protected TagRepository tagRepository;
 
+    protected TokenResponse token;
+    protected Tag savedTag;
+    protected Question savedQuestion;
+    protected User savedUser;
+    protected Answer savedAnswer;
+    protected SignUpRequest signUpRequest;
+    protected QuestionRequest questionRequest;
+    protected AnswerRequest answerRequest;
+    protected TagRequest tagRequest;
+    protected AnswerUpdateRequest updateAnswerRequest;
+    protected QuestionUpdateRequest questionUpdateRequest;
+
+    @BeforeEach
+    protected void fillDataBase() throws Exception {
+        answerRequest = generateAnswerRequest();
+        signUpRequest = generateSignUpRequest();
+        tagRequest = generateTagRequest();
+        questionRequest = generateQuestionRequest();
+        questionUpdateRequest = generateQuestionUpdateRequest();
+        updateAnswerRequest = generateAnswerUpdateRequest();
+
+        savedUser = insertUserOrAdmin(signUpRequest, ROLE_USER);
+        token = createSignIn(signUpRequest);
+        savedQuestion = createQuestion(token, questionRequest);
+        savedAnswer = createAnswer(savedQuestion.getId(), answerRequest, token);
+        savedTag = saveTag();
+    }
+
     @AfterEach
     protected void clearDataBase() {
         userRepository.deleteAll();
@@ -97,46 +136,35 @@ public class AbstractIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        return objectMapper.readValue(result.getResponse().getContentAsByteArray(),TokenResponse.class);
+        return objectMapper.readValue(result.getResponse().getContentAsByteArray(), TokenResponse.class);
     }
 
-    protected User insertUser(final SignUpRequest signUpRequest) {
-        final UserEntity userToSave = createEntity(signUpRequest);
+    protected User insertUserOrAdmin(final SignUpRequest signUpRequest, final UserEntityRole role) {
+        final UserEntity userToSave = createEntity(signUpRequest, role);
 
         return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
     }
 
-    protected User insertAdmin(final SignUpRequest signUpRequest) {
-        final UserEntity userToSave = createEntity(signUpRequest);
-        userToSave.setRole(UserEntityRole.ROLE_ADMIN);
-
-        return USER_MAPPER.toModel(userRepository.saveAndFlush(userToSave));
-    }
-
-    private UserEntity createEntity(final SignUpRequest signUpRequest) {
+    private UserEntity createEntity(final SignUpRequest signUpRequest, final UserEntityRole role) {
         final String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
 
         final UserEntity userToSave = generateUser();
         userToSave.setEmail(signUpRequest.getEmail());
         userToSave.setPassword(encodedPassword);
+        userToSave.setRole(role);
 
         return userToSave;
     }
 
-    protected Tag createTagFromResponse(final MvcResult result) throws Exception {
-        final String tagResponse = result.getResponse().getContentAsString();
-        return objectMapper.readValue(tagResponse, Tag.class);
-    }
-
     protected Tag createTag(final TokenResponse token, final TagRequest tagRequest) throws Exception {
-         final MvcResult result = mockMvc.perform(post(TAG_URL)
+        final MvcResult result = mockMvc.perform(post(TAG_URL)
                         .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsBytes(tagRequest)))
                         .andExpect(status().isCreated())
                         .andReturn();
 
-         return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Tag.class);
+        return objectMapper.readValue(result.getResponse().getContentAsByteArray(), Tag.class);
     }
 
     protected Question createQuestion(final TokenResponse token, final QuestionRequest questionRequest) throws Exception {
@@ -190,7 +218,7 @@ public class AbstractIntegrationTest {
 
     protected Tag saveTag() throws Exception {
         final SignUpRequest signUpAdminRequest = generateSignUpRequest();
-        insertAdmin(signUpAdminRequest);
+        insertUserOrAdmin(signUpAdminRequest, ROLE_ADMIN);
         final TokenResponse adminsToken = createSignIn(signUpAdminRequest);
 
         return createTag(adminsToken, generateTagRequest());
@@ -203,5 +231,33 @@ public class AbstractIntegrationTest {
                 .build();
 
         return QUESTION_DETAILS_MAPPER.toModel(questionDetailsRepository.saveAndFlush(questionDetails));
+    }
+
+    static Stream<Arguments> increaseRating() {
+        return Stream.of(
+                arguments(status().isOk(), null, ROLE_USER, +1, true),
+                arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, 0, false),
+                arguments(status().isForbidden(), null, UserEntityRole.ROLE_ADMIN, 0, false));
+    }
+
+    static Stream<Arguments> decreaseRating() {
+        return Stream.of(
+                arguments(status().isOk(), null, ROLE_USER, -1, true),
+                arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, 0, false),
+                arguments(status().isForbidden(), null, UserEntityRole.ROLE_ADMIN, 0, false));
+    }
+
+    protected UUID checkIdForSearch(UUID idForSearch, final UUID savedId) {
+        if (idForSearch == null) {
+            idForSearch = savedId;
+        }
+        return idForSearch;
+    }
+
+    protected TokenResponse isCreator(final boolean isCreator, TokenResponse activeToken, final TokenResponse token) {
+        if (isCreator) {
+            activeToken = token;
+        }
+        return activeToken;
     }
 }

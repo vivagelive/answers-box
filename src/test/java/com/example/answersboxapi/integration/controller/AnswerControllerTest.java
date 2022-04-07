@@ -1,68 +1,67 @@
 package com.example.answersboxapi.integration.controller;
 
 import com.example.answersboxapi.entity.AnswerEntity;
+import com.example.answersboxapi.enums.UserEntityRole;
 import com.example.answersboxapi.integration.AbstractIntegrationTest;
 import com.example.answersboxapi.model.answer.Answer;
 import com.example.answersboxapi.model.answer.AnswerRequest;
-import com.example.answersboxapi.model.answer.AnswerUpdateRequest;
 import com.example.answersboxapi.model.auth.SignUpRequest;
 import com.example.answersboxapi.model.auth.TokenResponse;
-import com.example.answersboxapi.model.question.Question;
-import com.example.answersboxapi.model.question.QuestionRequest;
 import com.example.answersboxapi.model.user.User;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
 
+import java.io.IOException;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import static com.example.answersboxapi.enums.UserEntityRole.ROLE_ADMIN;
+import static com.example.answersboxapi.enums.UserEntityRole.ROLE_USER;
 import static com.example.answersboxapi.utils.GeneratorUtil.*;
 import static com.example.answersboxapi.utils.assertions.AssertionsCaseForModel.assertAnswerFieldsEquals;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class AnswerControllerTest extends AbstractIntegrationTest {
 
-    @Test
-    public void create_happyPath() throws Exception {
+    @ParameterizedTest
+    @MethodSource("createWithStatusesAndRoles")
+    public void createAnswer(final ResultMatcher status, final UserEntityRole role, final AnswerRequest answerRequest,
+                             final boolean happyCondition) throws Exception {
         //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        final User savedUser = insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final QuestionRequest questionRequest = generateQuestionRequest();
-        Question savedQuestion = createQuestion(token, questionRequest);
-
-        final AnswerRequest answerRequest = generateAnswerRequest();
         answerRequest.setQuestionId(savedQuestion.getId());
+
+        final SignUpRequest activeUserRequest = generateSignUpRequest();
+        final User activeUser = insertUserOrAdmin(activeUserRequest, role);
+        final TokenResponse activeToken = createSignIn(activeUserRequest);
 
         //when
         final MvcResult result = mockMvc.perform(post(ANSWER_URL)
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+                .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(answerRequest)))
-                .andExpect(status().isCreated())
+                .andExpect(status)
                 .andReturn();
 
-        final Answer createdAnswer = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Answer.class);
-
         //then
-        assertAnswerFieldsEquals(createdAnswer, savedUser, savedQuestion);
+        assertCondition(happyCondition, result, activeUser);
     }
 
-    @Test
-    public void create_whenNotSignedIn() throws Exception {
-        //given
-        insertUser(generateSignUpRequest());
-
-        final AnswerRequest answerRequest = generateAnswerRequest();
-
-        //when
-        final ResultActions result = mockMvc.perform(post(ANSWER_URL)
+    @ParameterizedTest
+    @MethodSource("httpMethodsWithUrls")
+    public void answerEndpoints_whenNotSignedIn(final HttpMethod method, final String url) throws Exception {
+        //given & when
+        final ResultActions result = mockMvc.perform(request(method, ANSWER_URL + url, savedAnswer.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(answerRequest)));
 
@@ -71,54 +70,7 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void create_withAdminAccess() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertAdmin(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final AnswerRequest answerRequest = generateAnswerRequest();
-
-        //when
-        final ResultActions result = mockMvc.perform(post(ANSWER_URL)
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(answerRequest)));
-
-        //then
-        result.andExpect(status().isForbidden());
-    }
-
-    @Test
-    public void create_withEmptyAnswer() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final AnswerRequest answerRequest = generateEmptyAnswer();
-
-        //when
-        final ResultActions result = mockMvc.perform(post(ANSWER_URL)
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(answerRequest)));
-
-        //then
-        result.andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void create_whenQuestionDoesntExist() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final AnswerRequest answerRequest = generateAnswerRequest();
+    public void createAnswer_whenQuestionDoesntExist() throws Exception {
         answerRequest.setQuestionId(UUID.randomUUID());
 
         //when
@@ -131,432 +83,141 @@ public class AnswerControllerTest extends AbstractIntegrationTest {
         result.andExpect(status().isNotFound());
     }
 
-    @Test
-    public void update_happyPath() throws Exception {
+    @ParameterizedTest
+    @MethodSource("updateWithStatusesAndRoles")
+    public void updateAnswer(final ResultMatcher status, UUID id, final UserEntityRole role, final boolean isCreator,
+                             final boolean happyCondition) throws Exception {
         //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        final User savedUser = insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
-
-        final AnswerUpdateRequest updateAnswerRequest = generateAnswerUpdateRequest();
-
-        //when
-        final MvcResult result = mockMvc.perform(put(ANSWER_URL + "/{id}", savedAnswer.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateAnswerRequest)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        final Answer updatedAnswer = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Answer.class);
-
-        //then
-        assertAll(
-                () -> assertEquals(updateAnswerRequest.getText(), updatedAnswer.getText()),
-                () -> assertAnswerFieldsEquals(savedAnswer, savedUser, savedQuestion)
-        );
-    }
-
-    @Test
-    public void update_whenUserNotCreatorOfAnswer() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse answerCreatorToken = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(answerCreatorToken, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), answerCreatorToken);
-
-        final AnswerUpdateRequest updateAnswerRequest = generateAnswerUpdateRequest();
-
         final SignUpRequest usersRequest = generateSignUpRequest();
-        insertUser(usersRequest);
-        final TokenResponse usersToken = createSignIn(usersRequest);
+        insertUserOrAdmin(usersRequest, role);
+        TokenResponse activeToken = createSignIn(usersRequest);
+
+        final UUID idForSearch = checkIdForSearch(id, savedAnswer.getId());
+
+        activeToken = isCreator(isCreator, activeToken, token);
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}", savedAnswer.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + usersToken.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateAnswerRequest)));
-
-        //then
-        result.andExpect(status().isForbidden());
-    }
-
-    @Test
-    public void update_withAdminAccess() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        final User savedUser = insertUser(signUpRequest);
-
-        final TokenResponse usersToken = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(usersToken, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), usersToken);
-
-        final AnswerUpdateRequest updateAnswerRequest = generateAnswerUpdateRequest();
-
-        final SignUpRequest adminsRequest = generateSignUpRequest();
-        insertAdmin(adminsRequest);
-
-        final TokenResponse adminsToken = createSignIn(adminsRequest);
-
-        //when
-        final MvcResult result = mockMvc.perform(put(ANSWER_URL + "/{id}", savedAnswer.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
+        final MvcResult result = mockMvc.perform(put(ANSWER_URL + "/{id}", idForSearch)
+                .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateAnswerRequest)))
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andReturn();
 
-        final Answer updatedAnswer = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Answer.class);
-
         //then
-
-        assertAll(
-                () -> assertEquals(updateAnswerRequest.getText(), updatedAnswer.getText()),
-                () -> assertAnswerFieldsEquals(savedAnswer, savedUser, savedQuestion)
-        );
+        assertCondition(happyCondition, result, savedUser);
     }
 
-    @Test
-    public void update_whenAnswerNotFound() throws Exception {
+    @ParameterizedTest
+    @MethodSource("deleteWithStatusesRolesAndIds")
+    public void deleteAnswer(final ResultMatcher status, final UserEntityRole role, UUID id, final boolean isCreator) throws Exception {
         //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
+        final SignUpRequest activeUserRequest = generateSignUpRequest();
+        insertUserOrAdmin(activeUserRequest, role);
+        TokenResponse activeToken = createSignIn(activeUserRequest);
 
-        final TokenResponse token = createSignIn(signUpRequest);
+        final UUID idForSearch = checkIdForSearch(id, savedAnswer.getId());
 
-        final AnswerUpdateRequest updateAnswerRequest = generateAnswerUpdateRequest();
-
-        createQuestion(token, generateQuestionRequest());
-
-        final UUID notExistingId = UUID.randomUUID();
+        activeToken = isCreator(isCreator, activeToken, token);
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}", notExistingId)
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateAnswerRequest)));
-
-        //then
-        result.andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void update_whenNotSignedIn() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse usersToken = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(usersToken, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), usersToken);
-
-        final AnswerUpdateRequest updateAnswerRequest = generateAnswerUpdateRequest();
-
-        //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}", savedAnswer.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateAnswerRequest)));
-
-        //then
-        result.andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    public void deleteById_happyPath() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
-
-        //when
-        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", savedAnswer.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", idForSearch)
+                .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON));
 
         //then
-        result.andExpect(status().isNoContent());
+        result.andExpect(status);
     }
 
-    @Test
-    public void delete_whenNotSignedIn() throws Exception {
+    @ParameterizedTest
+    @MethodSource("increaseRating")
+    public void increaseAnswerRating(final ResultMatcher status, UUID id, final UserEntityRole role,
+                                     final Integer increaseDelta, final boolean happyCondition) throws Exception {
         //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
+        final SignUpRequest activeUserRequest = generateSignUpRequest();
+        insertUserOrAdmin(activeUserRequest, role);
+        final TokenResponse activeToken = createSignIn(activeUserRequest);
 
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+        final UUID idForSearch = checkIdForSearch(id, savedAnswer.getId());
 
         //when
-        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", savedAnswer.getId())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    public void delete_whenAnswerNotFound() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
-
-        final UUID notExistingId = UUID.randomUUID();
-
-        //when
-        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", notExistingId)
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void delete_whenUserNotCreatorOfAnswer() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse answerCreatorToken = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(answerCreatorToken, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), answerCreatorToken);
-
-        final SignUpRequest userRequest = generateSignUpRequest();
-        insertUser(userRequest);
-
-        final TokenResponse userToken = createSignIn(userRequest);
-
-        //when
-        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", savedAnswer.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + userToken.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isForbidden());
-    }
-
-    @Test
-    public void delete_withAdminAccess() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
-
-        final SignUpRequest adminsRequest = generateSignUpRequest();
-        insertAdmin(adminsRequest);
-
-        final TokenResponse adminsToken = createSignIn(adminsRequest);
-
-        //when
-        final ResultActions result = mockMvc.perform(delete(ANSWER_URL + "/{id}", savedAnswer.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isNoContent());
-    }
-
-    @Test
-    public void increaseRatingById_happyPath() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
-
-        //when
-        mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", savedAnswer.getId())
-                        .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+        final MvcResult result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", idForSearch)
+                        .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken())
                         .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk())
+                        .andExpect(status)
                         .andReturn();
 
         final AnswerEntity foundAnswer = answerRepository.getById(savedAnswer.getId());
 
         //then
-        assertEquals(savedAnswer.getRating() + 1, foundAnswer.getRating());
+        assertAll(
+                () -> assertEquals(savedAnswer.getRating() + increaseDelta, foundAnswer.getRating()),
+                () -> assertCondition(happyCondition, result, savedUser));
     }
 
-    @Test
-    public void increaseRatingById_whenNotSignedIn() throws Exception {
+    @ParameterizedTest
+    @MethodSource("decreaseRating")
+    public void decreaseAnswerRating(final ResultMatcher status, UUID id, final UserEntityRole role,
+                                     final Integer decreaseDelta, final boolean happyCondition) throws Exception {
         //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
+        final SignUpRequest activeUserRequest = generateSignUpRequest();
+        insertUserOrAdmin(activeUserRequest, role);
+        final TokenResponse activeToken = createSignIn(activeUserRequest);
 
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+        final UUID idForSearch = checkIdForSearch(id, savedAnswer.getId());
 
         //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", savedAnswer.getId())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    public void increaseRatingById_whenAnswerNotFound() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        createQuestion(token, generateQuestionRequest());
-
-        final UUID notExistingId = UUID.randomUUID();
-
-        //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", notExistingId)
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void increaseRatingById_withAdminAccess() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
-
-        final SignUpRequest adminRequest = generateSignUpRequest();
-        insertAdmin(adminRequest);
-
-        final TokenResponse adminsToken = createSignIn(adminRequest);
-
-        //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/increase-rating", savedAnswer.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isForbidden());
-    }
-
-    @Test
-    public void decreaseRatingById_happyPath() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
-
-        //when
-        mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", savedAnswer.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
+        final MvcResult result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", idForSearch)
+                .header(AUTHORIZATION, TOKEN_PREFIX + activeToken.getAccessToken())
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
+                .andExpect(status)
                 .andReturn();
 
         final AnswerEntity foundAnswer = answerRepository.getById(savedAnswer.getId());
 
         //then
-        assertEquals(savedAnswer.getRating() - 1, foundAnswer.getRating());
+        assertAll(
+                () -> assertEquals(savedAnswer.getRating() + decreaseDelta, foundAnswer.getRating()),
+                () -> assertCondition(happyCondition, result, savedUser));
     }
 
-    @Test
-    public void decreaseRatingById_whenNotSignedIn() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
-
-        //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", savedAnswer.getId())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isUnauthorized());
+    static Stream<Arguments> createWithStatusesAndRoles() {
+        return Stream.of(
+                arguments(status().isCreated(), ROLE_USER, generateAnswerRequest(), true),
+                arguments(status().isForbidden(), ROLE_ADMIN, generateAnswerRequest(), false),
+                arguments(status().isBadRequest(), ROLE_USER, generateEmptyAnswer(), false));
     }
 
-    @Test
-    public void decreaseRatingById_whenAnswerNotFound() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
-
-        final TokenResponse token = createSignIn(signUpRequest);
-
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
-
-        final UUID notExistingId = UUID.randomUUID();
-
-        //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", notExistingId)
-                .header(AUTHORIZATION, TOKEN_PREFIX + token.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isNotFound());
+    static Stream<Arguments> updateWithStatusesAndRoles() {
+        return Stream.of(
+                arguments(status().isOk(), null, ROLE_USER, true, true),
+                arguments(status().isOk(), null, ROLE_ADMIN, false, true),
+                arguments(status().isNotFound(), UUID.randomUUID(), ROLE_USER, false, false),
+                arguments(status().isForbidden(), null, ROLE_USER, false, false));
     }
 
-    @Test
-    public void decreaseRatingById_withAdminAccess() throws Exception {
-        //given
-        final SignUpRequest signUpRequest = generateSignUpRequest();
-        insertUser(signUpRequest);
+    static Stream<Arguments> deleteWithStatusesRolesAndIds() {
+        return Stream.of(
+                arguments(status().isNoContent(), ROLE_USER, null, true),
+                arguments(status().isForbidden(), ROLE_USER, null, false),
+                arguments(status().isNoContent(), ROLE_ADMIN, null, false),
+                arguments(status().isNotFound(), ROLE_USER, UUID.randomUUID(), false));
+    }
 
-        final TokenResponse token = createSignIn(signUpRequest);
+    static Stream<Arguments> httpMethodsWithUrls() {
+        return Stream.of(
+                arguments(HttpMethod.POST, ""),
+                arguments(HttpMethod.PUT, "/{id}"),
+                arguments(HttpMethod.DELETE, "/{id}"),
+                arguments(HttpMethod.PUT, "/{id}/increase-rating"),
+                arguments(HttpMethod.PUT, "/{id}/decrease-rating"));
+    }
 
-        final Question savedQuestion = createQuestion(token, generateQuestionRequest());
-        final Answer savedAnswer = createAnswer(savedQuestion.getId(), generateAnswerRequest(), token);
+    private void assertCondition(final boolean condition, final MvcResult result, final User activeUser) throws IOException {
+        if (condition){
+            final Answer foundAnswer = objectMapper.readValue(result.getResponse().getContentAsByteArray(), Answer.class);
 
-        final SignUpRequest adminsRequest = generateSignUpRequest();
-        insertAdmin(adminsRequest);
-
-        final TokenResponse adminsToken = createSignIn(adminsRequest);
-
-        //when
-        final ResultActions result = mockMvc.perform(put(ANSWER_URL + "/{id}/decrease-rating", savedAnswer.getId())
-                .header(AUTHORIZATION, TOKEN_PREFIX + adminsToken.getAccessToken())
-                .contentType(MediaType.APPLICATION_JSON));
-
-        //then
-        result.andExpect(status().isForbidden());
+            assertAnswerFieldsEquals(foundAnswer, activeUser, savedQuestion);
+        }
     }
 }
