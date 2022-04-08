@@ -37,6 +37,14 @@ configurations {
     }
 }
 
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.example.answerapi.AnswerBoxApiApplication.class'
+        )
+    }
+}
+
 repositories {
     mavenCentral()
 }
