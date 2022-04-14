@@ -1,0 +1,22 @@
+variables:
+    PROGECT_NAME: answersbox
+    DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://docker:2375
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+stages:
+  - build
+
+before_script:
+  - export GRADLE_USER_HOME="$(pwd)/.gradle"
+
+build:
+  stage: build
+  image: gradle:alpine
+  script: gradle build
+  services:
+    - docker:stable-dind
+  artifacts:
+      paths:
+        - build/libs/*.jar
+      expire_in: 1 week
